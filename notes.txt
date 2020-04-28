@@ -1,0 +1,32 @@
+Set up final and replicate weights assuming no difference between different modalities in HINTS 5, Cycle 3
+
+Cycle2
+Import cycle 2 data
+select PersonID, PERSON_FINWT0 through PERSON_FINWT50
+mutate survey = 1
+rename PERSON_FINWT0 to Merged_NWGT0
+*rename PERSON_FINWT1-PERSON_FINWT50 to Merged_NWGT1-NWGT50
+*copy PERSON_FINWT0 to Merged_NWGT51-NWGT100
+inner join with cycle 2 data by PersonID
+
+Cycle3
+Import cycle 3 data
+select PersonID, TG_all_FINWT0 through TG_all_FINWT50
+mutate survey = 2
+*rename TG_all_FINWT0 to Merged_NWGT0
+*copy TG_all_FINWT0 to Merged_NWGT1-NWGT50
+rename TG_all_FINWT1-TG_all_FINWT50 to Merged_NWGT51-NWGT100
+inner join with cycle 3 data by PersonID
+
+bind_rows(Cycle2, Cycle3)
+mutate_at "survey" to factor with distinct names for cycles
+
+* work out how to do with mutate_at()
+
+914 variables appear in either or both of cycle 2 and cycle 3
+combined file adds 102 variables: cycle ID, final sample weight, 100 replicate
+weights, for 1,016 variables
+final sample sizes are 3,504 for cycle 2 and 5,438 for cycle 3; total 8,942
+
+Richard Moser, NCI
+moserr@mail.nih.gov

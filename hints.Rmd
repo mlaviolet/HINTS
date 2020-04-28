@@ -1,0 +1,436 @@
+---
+title: "HINTS with R"
+author: "ML"
+date: "`r format(Sys.time(), '%Y-%m-%d %H:%M')`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(digits = 4)
+```
+
+```{r load-pkgs, echo=FALSE, message=FALSE}
+library(broom)
+library(dplyr)
+library(haven)
+library(purrr)
+library(srvyr)
+library(survey)
+library(tibble)
+library(tidyr)
+library(kableExtra)
+```
+
+# Introduction
+
+The Health Information National Trends Survey (HINTS) is conducted by the National Cancer Institute (NCI) to collect nationally representative data about the American public's use of cancer-related information. 
+
+This document shows how to analyze the public HINTS data using the R statistics-graphics language. It follows the discussion in *Overview of the HINTS 5 Cycle 3 Survey and Data Analysis Recommendations*, available [here](https://hints.cancer.gov/data/download-data.aspx). Page numbers and section citations refer to that document.
+
+# Analyzing HINTS data
+
+## Recommendations for statistical analyses using HINTS 5 Cycle 3
+
+NCI strongly recommends that analysts first assess for possible differences in the three survey modalities between their target variables. The modalities are
+
+* Paper only
+* Option to respond by paper or online ("Web option")
+* Paper/online option with a \$10 incentive ("Web bonus")
+
+If group differences are not found, the analyst can proceed with analyzing the entire sample. Otherwise the analyst can control for group membership or analyze only a particular group. The data for HINTS 5, Cycle 3 contains several sets of weights appropriate for different analyses. The weights consist of a final sampling weight for point estimates and a series of replicate weights for computing standard errors and confidence intervals. This table lists the weights that are appropriate for particular situations. 
+  
+```{r, echo=FALSE}
+data.frame(
+  `Analysis data` = c("Combined sample", "Combined sample, controlling for group differences", "Paper only", "Web option", "Web bonus"),
+  `Final weight` = c("TG_all_FINWT0", "nwgt0", "TG1_FINWT0", "TG2_FINWT0",
+                     "TG3_FINWT0"),
+  `Replicate weights` = c("nwgt1 - nwgt150", "TG_all_FINWT1 - TG_all_FINWT50",
+                          "TG_1_FINWT1 - TG_1_FINWT50", "TG_2_FINWT1 - TG_2_FINWT50",
+                          "TG_3_FINWT1 - TG_3_FINWT50")) %>% 
+  kable() %>% 
+  kable_styling()
+```
+
+### Analyzing HINTS 5 Cycle 3 data using the composite sample
+
+I'll begin with analyses of the composite sample. Later I'll discuss methods for assessing and dealing with group differences.
+
+To start, load the following packages.
+
+```{r show-pkgs, eval=FALSE}
+library(broom)
+library(dplyr)
+library(haven)
+library(purrr)
+library(srvyr)
+library(survey)
+library(tidyr)
+```
+
+Most of the work is done by the `survey` and `srvyr` packages. The `survey` package provides functions for analysis of data from complex samples with similar functionality to SUDAAN. `srvyr` is designed to work with the `tidyverse` suite. I'll use the `tidyverse` packages extensively.
+
+#### Import and recode data
+##### Pages 14-15
+
+HINTS data are provided in three formats: SAS `.sas7bdat` data set, SPSS (`.sav`, `.por`), and Stata (`.dta`, versions prior to 13). All can be imported by R; I'll work with the SAS data. First we import the SAS data set into R using `read_sas()` from the `haven` package, then do some recoding. 
+
+```{r}
+edu_lbl <- c("Less than high school",
+             "12 years or completed high school",
+             "Some college",
+             "College graduate or higher")
+health_lbl <- c("Excellent", "Very good", "Good", "Fair", "Poor")
+group_lbl <-  c("Paper only", "Web option", "Web bonus")
+# convenience function to show percentages to four places like SAS
+percent <- function(x, decimals = 4) round(100 * x, decimals)
+# import SAS data set contained in .zip file
+hints5_3 <- read_sas(unz("HINTS5_Cycle3_SAS_03112020.zip",
+                         "hints5_cycle3_public.sas7bdat")) %>% 
+  mutate(gender = factor(GenderC, 1:2, c("Male", "Female")),
+         # recode negative GeneralHealth values to missing
+         GeneralHealth = if_else(GeneralHealth < 0, NA_real_, GeneralHealth),
+         # collapse education to four levels
+         edu = case_when(Education %in% 1:2 ~ 1,
+                         Education == 3     ~ 2,
+                         Education %in% 4:5 ~ 3,
+                         Education %in% 6:7 ~ 4,
+                         TRUE ~ NA_real_)) %>% 
+  # change edu and Treatment_H5C3 from numeric to factor
+  mutate_at("edu", factor, 1:4, edu_lbl) %>% 
+  mutate_at("Treatment_H5C3", factor, 1:3, group_lbl) %>% 
+  # "No" must be the referent level of SeekCancerInfo to model probability of
+  # "Yes". By default the first level of a factor is the referent level, so we
+  # reverse the order from the data.
+  mutate_at("SeekCancerInfo", factor, 2:1, c("No", "Yes"))
+```
+
+To analyze complex survey data in R we create a survey object that contains information about the sampling design and the survey data. For a replicate-weight design, we need to specify
+
+* The data frame containing the survey data
+* The variable containing the final sampling weight
+* The variables containing the replicate weights
+* The type of replication weights, such as jackknife or balanced repeated replication (BRR)
+
+Standard errors can also be computed with Taylor series linearization. For more, see the section "Final Sample and Replicate Weights for Jackknife Replication."
+
+#### Frequency table and chi-square test
+##### Pages 15-16
+
+Using `survey_mean()` from `srvyr` I'll generate a cross-frequency table of education by gender, along with a (Wald) Chi-squared test of independence. First we construct a replicate weights survey object using the `TG_all_FINWT` series of 50 replicate weights.
+
+```{r, warning = FALSE}
+# construct replicate weights survey object
+hints5_3_rep <- as_survey_rep(hints5_3, weights = "TG_all_FINWT0",
+                              repweights = paste0("TG_all_FINWT", 1:50),
+                              type = "JK1", scale = 49/50, mse = TRUE)
+
+```
+
+Now we can generate a table of unweighted sample sizes and percentages of gender within each education level along with confidence intervals.
+
+```{r, warning=FALSE}
+tbl_1 <- hints5_3_rep %>% 
+  group_by(edu, gender) %>% 
+  summarize(n = unweighted(n()),
+            pct = survey_mean(na.rm = TRUE, vartype = c("se", "ci"))) %>% 
+  drop_na() %>% 
+  mutate_at(vars(starts_with("pct")), percent)
+
+tbl_1 %>% 
+  kable() %>% 
+  kable_styling()
+```
+
+To perform the chi-square test we use `svychisq()` from `survey`. Wald and adjusted Wald tests are available.
+
+```{r}
+chisq_test <- svychisq(~ edu + gender, hints5_3_rep, statistic = "Wald")
+chisq_test$statistic
+chisq_test$parameter
+
+chisq_test2 <- svychisq(~ edu + gender, hints5_3_rep, statistic = "adjWald")
+chisq_test2$statistic
+chisq_test2$parameter
+```
+
+Results match the table on page 16.
+
+#### Multivariable logistic regression of gender and education on SeekCancerInfo
+
+This example illustrates a multivariable logistic regression model using the `svyglm()` function from `survey`. The first argument is a modeling formula, the second is the survey object, and the third specifies a binary response.
+
+```{r}
+model03 <- svyglm(SeekCancerInfo ~ gender + edu, hints5_3_rep, 
+                  family = "quasibinomial")
+model03$df.resid
+```
+
+To test for model effects, we use the `regTermTest()` function to test for the significance of terms in the model. The first argument is the model object and the second is the model term. Note the `df = 49` argument that adjusts for the replicate weight design. See the discussion "Denominator Degrees of Freedom (DDF)" in the document on page 12. These results match the "Type 3 Analysis of Effects" table on page 17.
+
+```{r}
+regTermTest(model03, "gender", df = 49)
+regTermTest(model03, "edu", df = 49)
+
+```
+
+To obtain odds ratios with confidence intervals, we exponentiate the model coefficients and interval endpoints. The following code collects these results into a table. Note the `ddf = 49` argument to the `confint` function. Results match the "Odds Ratio Estimates" table on page 18.
+
+```{r}
+# odds ratios
+or_ci <- exp(confint(model03, ddf = 49)) %>% 
+  as_tibble(rownames = "name")
+or <- exp(coef(model03)) %>% 
+  enframe() %>% 
+  inner_join(or_ci, by = "name") %>% 
+  filter(name != "(Intercept)") %>% 
+  setNames(c("Effect", "Odds ratio", "OR lower 95%", "OR upper 95%"))
+or %>% 
+  kable() %>% 
+  kable_styling()
+
+```
+
+#### Multivariable linear regression of gender and education on GeneralHealth
+
+Although `GeneralHealth` is actually a categorical variable I'll follow the document and treat it as continuous for purposes of discussion. Here's the linear regression model fitting `GeneralHealth` against `Treatment_H5C3`. In the following, omitting the `family` argument defaults to the normal regression model. This code reproduces the results on page 18.
+
+```{r}
+model04 <- svyglm(GeneralHealth ~ gender + edu, hints5_3_rep)
+tidy(model04) %>% 
+  kable() %>% 
+  kable_styling()
+```
+
+```{r}
+regTermTest(model04, ~gender + edu)
+regTermTest(model04, "gender")
+regTermTest(model04, "edu")
+
+```
+
+#### Taylor series linearization variance estimation method
+
+Replication is the recommended method for variance estimation in HINTS. The variables VAR_CLUSTER and VAR_STRATUM are provided for variance estimation using Taylor series linearization. These variables are provided for users of software packages which don't support replicate weights. The following code constructs the survey object for analyzing the combined sample (no group differences) and replicates the results on pages 20 and 21. Standard errors and confidence intervals differ slightly from those obtained using replicate weights.
+
+```{r, warning=FALSE}
+hints5_3_lin <- 
+  as_survey_design(hints5_3, ids = VAR_CLUSTER, strata = VAR_STRATUM, 
+                   weight = TG_all_FINWT0, nest = TRUE)
+hints5_3_lin %>% 
+  group_by(edu, gender) %>% 
+  summarize(n = unweighted(n()),
+            pct = survey_mean(na.rm = TRUE, vartype = c("se", "ci"))) %>% 
+  drop_na() %>% 
+  mutate_at(vars(starts_with("pct")), percent) %>% 
+  kable() %>% 
+  kable_styling()
+
+```
+
+```{r}
+chisq_wald <- svychisq(~ edu + gender, hints5_3_lin, statistic = "Wald")
+chisq_wald$statistic
+chisq_wald$parameter
+```
+
+```{r}
+chisq_wald <- svychisq(~ edu + gender, hints5_3_lin, statistic = "adjWald")
+chisq_wald$statistic
+chisq_wald$parameter
+```
+
+# RESUME HERE
+
+To assess for differences across modality groups, I'll create a survey object `hints5_3_grp` that uses `nwgt0` as the sampling weight and `nwgt1` through `nwgt150` as replicate weights.
+
+#### Page 8
+
+```{r}
+hints5_3_grp <- as_survey_rep(hints5_3, weights = "nwgt0", 
+                              repweights = paste0("nwgt", 1:150), 
+                              type = "JK1", scale = 49/50, mse = TRUE) 
+```
+
+### Assessing for differences across groups, binary outcome
+
+To fit a regression model we use `svyglm()` from `survey`. The first argument is a modeling formula; the second is the survey object. For a logistic regression model use the argument `family = "quasibinomial"`. Store the results in an object so that you can extract fitted values, residuals, and model metrics.
+
+```{r}
+model01 <- svyglm(SeekCancerInfo ~ Treatment_H5C3, hints5_3_grp, 
+                  family = "quasibinomial") 
+summary(model01)
+```
+
+Note that "Paper only" is the referent because it's the first level of `Treatment_H5C3`. The results indicate no significant differences in `SeekCancerInfo` between the treatment groups. We can also test for the effect of `Treatment_H5C3` with the function `regTermTest()`, which tests the significance of a term or terms in a model.
+
+```{r}
+regTermTest(model01, "Treatment_H5C3")
+```
+
+### Assessing for differences across groups, continuous outcome
+
+```{r}
+model02 <- svyglm(GeneralHealth ~ Treatment_H5C3, hints5_3_grp)
+summary(model02)
+
+```
+
+
+### If group differences are found
+
+### Option A: Use the combined sample and control for group assignment
+
+```{r}
+# ADD EXAMPLE MODEL WITH PREDICTORS
+# model00 <- svyglm(SeekCancerInfo ~ Treatment_H5C3 + [INSERT CONVARIATES],
+#                   hints5_3_grp, 
+#        family = "quasibinomial") 
+# summary(model00)
+```
+
+The survey function `svychisq()` currently supports only two-way tables.
+
+ADD EXAMPLE USING regTermtest() to assess group differences
+
+##### Option B: Use one group only, without accounting for group differences
+ 
+```{r}
+# using "Paper Only" group
+hints5_3_paper <- hints5_3 %>% 
+  filter(Treatment_H5C3 == "Paper only") %>% 
+  as_survey_rep(weights = "TG1_FINWT0",
+                repweights = paste0("TG1_FINWT", 1:50), # df = 49,
+                type = "JK1", scale = 49/50, mse = TRUE)
+nrow(hints5_3_paper)
+# ADD EXAMPLE MODEL WITH PREDICTORS
+
+```
+
+## Merging HINTS survey iterations
+
+### Assuming no differences between groups
+```{r}
+# Cycle 2, 100 replicate weights
+# cycle2a, import Cycle 2 data
+# cycle2b, new replicate weights 1 - 50: copy PERSON_FINWT1 - PERSON_FINWT50 as
+#   Merged_NWGT1 - Merged_NWGT50
+# cycle 2c, new replicate weights 51 - 100: copy PERSON_FINWT0 50 times as 
+#   Merged_NWGT51 - Merged_NWGT100 
+# temp_hints5_cycle2: join cycle2a, cycle2b, cycle2c by PersonID
+cycle2a <- 
+  read_sas(unz("HINTS_5_Cycle_2_SAS_03192020.zip",
+               "HINTS 5- Cycle 2-SAS-03192020/hints5_cycle2_public.sas7bdat")) 
+cycle2b <- cycle2a %>% 
+  select(PersonID, c(paste0("PERSON_FINWT", 0:50))) %>% 
+  mutate(Merged_NWGT0 = PERSON_FINWT0) %>% 
+  select(-PERSON_FINWT0) %>% 
+  rename_at(paste0("PERSON_FINWT", 1:50), ~ paste0("Merged_NWGT", 1:50))  
+cycle2c <- map(1:50, ~ select(cycle2b, PersonID, Merged_NWGT0)) %>% 
+  reduce(inner_join, by = "PersonID") %>% 
+  set_names(c("PersonID", paste0("Merged_NWGT", 51:100)))
+temp_hints5_cycle2 <- list(cycle2a, cycle2b, cycle2c) %>% 
+  reduce(inner_join, by = "PersonID") %>% 
+  mutate(survey = 1) 
+# clean up
+rm(cycle2a, cycle2b, cycle2c)
+
+# Cycle 3, 100 replicate weights
+# cycle3a, import Cycle 3 data
+# cycle3b, new replicate weights 51 - 100: copy TG_all_FINWT1 - TG_all_FINWT50 as
+#   Merged_NWGT51 - Merged_NWGT100
+# cycle 3c, new replicate weights 1 - 50: copy TG_all_FINWT0 50 times as 
+#   Merged_NWGT1 - Merged_NWGT50 
+# temp_hints5_cycle3: join cycle3a, cycle3b, cycle3c by PersonID
+cycle3a <- read_sas(unz("HINTS5_Cycle3_SAS_03112020.zip",
+                         "hints5_cycle3_public.sas7bdat"))
+cycle3b <- cycle3a %>% 
+  select(PersonID, c(paste0("TG_all_FINWT", 0:50))) %>% 
+  mutate(Merged_NWGT0 = TG_all_FINWT0) %>% 
+  select(-TG_all_FINWT0) %>% 
+  rename_at(paste0("TG_all_FINWT", 1:50), ~ paste0("Merged_NWGT", 51:100))
+cycle3c <- map(1:50, ~ select(cycle3b, PersonID, Merged_NWGT0)) %>% 
+  reduce(inner_join, by = "PersonID") %>% 
+  set_names(c("PersonID", paste0("Merged_NWGT", 1:50)))
+temp_hints5_cycle3  <- list(cycle3a, cycle3b, cycle3c) %>% 
+  reduce(inner_join, by = "PersonID") %>% 
+  mutate(survey = 2) 
+rm(cycle3a, cycle3b, cycle3c)
+
+# stack Cycle 2 and Cycle 3 into a single table and create survey object with
+#   the new 100 replicate weights
+# resulting table has 8,942 rows (3,504 for Cycle 2 and 5,438 for Cycle 3)
+#   and 1,016 columns
+#     914 variables appear in either or both of Cycle 2 and Cycle 3
+#     102 added variables: cycle ID, final sample weight, 100 replicate
+#     weights
+mergeHINTSS5C2_HINTS5C3 <- 
+  bind_rows(temp_hints5_cycle2, temp_hints5_cycle3) %>% 
+  # reorder columns to put new weights in front
+  select(survey, PersonID, num_range("Merged_NWGT", 0:100), everything()) %>% 
+  # variable to distinguish survey iterations
+  mutate_at("survey", factor, levels = 1:2,
+            labels = c("HINTS 5 Cycle 2", "HINTS 5 Cycle 3")) %>% 
+  # survey design object
+  as_survey_rep(weights = "Merged_NWGT0",
+                repweights = paste0("Merged_NWGT", 1:100), 
+                type = "JK1", scale = 49/50, mse = TRUE)
+rm(temp_hints5_cycle2, temp_hints5_cycle3)
+
+```
+
+
+```{r}
+mergeHINTSS5C2_HINTS5C3 %>% 
+  mutate_at("SeekHealthInfo", factor, labels = c("NA", "Yes", "No")) %>% 
+  group_by(SeekHealthInfo) %>% 
+  summarize(n = unweighted(n()),
+            pct = survey_mean(na.rm = TRUE)) %>% 
+  mutate_at(vars(starts_with("pct")), percent)
+```
+
+
+```{r}
+mergeHINTSS5C2_HINTS5C3 %>%
+  mutate_at("ChanceAskQuestions", factor,
+            labels = c(paste0("NA", 1:5),
+                       "Always", "Usually", "Sometimes", "Never")) %>%
+  group_by(ChanceAskQuestions) %>%
+  summarize(n = unweighted(n()),
+            pct = survey_mean(na.rm = TRUE)) %>%
+  mutate_at(vars(starts_with("pct")), percent)
+```
+
+
+
+
+
+
+## Conclusion
+
+
+
+
+
+## Extras
+
+## Group Diffferences Are Significant
+
+In this case the group differences are not significant. If they were, one approach would be to control for group differences by including `Treatment_H5C3` in the model of interest. The appropriate survey object uses the `hints5_3_grp` object with 150 replicate weights. 
+
+## Group Differences Not Significant
+
+If group differences are not significant we can use the sample including all three groups. We need a different set of weights. For estimates using all groups use the weights `TG_all_FINWT0` through `TG_all_FINWT50`.
+
+```{r}
+hints5_3_all <- hints5_3 %>% 
+  as_survey_rep(weights = "TG_all_FINWT0",
+                repweights = paste0("TG_all_FINWT", 1:50), 
+                type = "JK1", scale = 49/50, mse = TRUE)
+```
+
+
+
+
+
+

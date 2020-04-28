@@ -1,0 +1,280 @@
+---
+title: "HINTS with R"
+author: "Michael Laviolette"
+date: "`r format(Sys.time(), '%Y-%m-%d %H:%M')`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(digits = 4)
+```
+
+Page citations refer to "Overview of the Hints 5 Cycle 3 Survey and Data Analysis Recommendations."
+
+```{r load-pkgs, message=FALSE}
+library(broom)
+library(dplyr)
+library(haven)
+library(purrr)
+library(srvyr)
+library(survey)
+library(tibble)
+library(tidyr)
+library(kableExtra)
+```
+
+## Import and recode data, pp. 14-15
+
+```{r}
+edu_lbl <- c("Less than high school",
+             "12 years or completed high school",
+             "Some college",
+             "College graduate or higher")
+health_lbl <- c("Excellent", "Very good", "Good", "Fair", "Poor")
+group_lbl <-  c("Paper only", "Web option", "Web bonus")
+# convenience function to show percentages to four places like SAS
+percent <- function(x, decimals = 4) round(100 * x, decimals)
+# import SAS data set contained in .zip file
+hints5_3 <- read_sas(unz("HINTS5_Cycle3_SAS_03112020.zip",
+                         "hints5_cycle3_public.sas7bdat")) %>% 
+  mutate(gender = factor(GenderC, 1:2, c("Male", "Female")),
+         # recode negative GeneralHealth values to missing
+         GeneralHealth = if_else(GeneralHealth < 0, NA_real_, GeneralHealth),
+         # collapse education to four levels
+         edu = case_when(Education %in% 1:2 ~ 1,
+                         Education == 3     ~ 2,
+                         Education %in% 4:5 ~ 3,
+                         Education %in% 6:7 ~ 4,
+                         TRUE ~ NA_real_)) %>% 
+  # change edu and Treatment_H5C3 from numeric to factor
+  mutate_at("edu", factor, 1:4, edu_lbl) %>% 
+  mutate_at("Treatment_H5C3", factor, 1:3, group_lbl) %>% 
+  # "No" must be the referent level of SeekCancerInfo to model probability of
+  # "Yes". By default the first level of a factor is the referent level, so we
+  # reverse the order from the data.
+  mutate_at("SeekCancerInfo", factor, 2:1, c("No", "Yes"))
+```
+
+## Assessing for differences across groups, binary outcome, p. 8
+
+```{r}
+hints5_3_grp <- as_survey_rep(hints5_3, weights = "nwgt0", 
+                              repweights = paste0("nwgt", 1:150), 
+                              type = "JK1", scale = 49/50, mse = TRUE) 
+model01 <- svyglm(SeekCancerInfo ~ Treatment_H5C3, hints5_3_grp, 
+                  family = "quasibinomial") 
+regTermTest(model01, "Treatment_H5C3")
+
+```
+
+## Assessing for differences across groups, continuous outcome, p. 8
+
+```{r}
+model02 <- svyglm(GeneralHealth ~ Treatment_H5C3, hints5_3_grp)
+regTermTest(model02, "Treatment_H5C3")
+
+```
+
+# Replicate weights variance estimation method
+## Frequency table and chi-square test, p. 16
+
+```{r, warning = FALSE}
+# construct replicate weights survey object
+hints5_3_rep <- as_survey_rep(hints5_3, weights = "TG_all_FINWT0",
+                              repweights = paste0("TG_all_FINWT", 1:50),
+                              type = "JK1", scale = 49/50, mse = TRUE)
+
+```
+
+```{r, warning=FALSE}
+tbl_1 <- hints5_3_rep %>% 
+  group_by(edu, gender) %>% 
+  summarize(n = unweighted(n()),
+            pct = survey_mean(na.rm = TRUE, vartype = c("se", "ci"))) %>% 
+  drop_na() %>% 
+  mutate_at(vars(starts_with("pct")), percent)
+
+tbl_1 %>% 
+  kable() %>% 
+  kable_styling()
+```
+
+```{r}
+chisq_test <- svychisq(~ edu + gender, hints5_3_rep, statistic = "Wald")
+chisq_test$statistic
+chisq_test$parameter
+
+chisq_test_adj <- svychisq(~ edu + gender, hints5_3_rep, statistic = "adjWald")
+chisq_test_adj$statistic
+chisq_test_adj$parameter
+```
+
+## Logistic regression, pp. 17-18
+
+```{r}
+model03 <- svyglm(SeekCancerInfo ~ gender + edu, hints5_3_rep, 
+                  family = "quasibinomial")
+model03$df.resid
+```
+
+### Analysis of effects, p. 17
+```{r}
+regTermTest(model03, "gender", df = 49)
+regTermTest(model03, "edu", df = 49)
+
+```
+
+### Odds ratios, p. 18
+
+```{r}
+exp(coef(model03)) 
+exp(confint(model03, ddf = 49)) 
+
+```
+
+## Linear regression, pp. 18-19
+### Estimates and model effects tests, p.19
+
+```{r}
+model04 <- svyglm(GeneralHealth ~ gender + edu, hints5_3_rep)
+tidy(model04) %>% 
+  kable() %>% 
+  kable_styling()
+```
+
+```{r}
+regTermTest(model04, ~ gender + edu)
+regTermTest(model04, "gender")
+regTermTest(model04, "edu")
+
+```
+
+# Taylor series linearization variance estimation method
+## Frequency table, p. 19
+
+```{r, warning=FALSE}
+hints5_3_lin <- 
+  as_survey_design(hints5_3, ids = VAR_CLUSTER, strata = VAR_STRATUM, 
+                   weight = TG_all_FINWT0, nest = TRUE)
+hints5_3_lin %>% 
+  group_by(edu, gender) %>% 
+  summarize(n = unweighted(n()),
+            pct = survey_mean(na.rm = TRUE, vartype = c("se", "ci"))) %>% 
+  drop_na() %>% 
+  mutate_at(vars(starts_with("pct")), percent) %>% 
+  kable() %>% 
+  kable_styling()
+
+```
+
+## Chi-square tests, p. 20
+
+```{r}
+chisq_wald <- svychisq(~ edu + gender, hints5_3_lin, statistic = "Wald")
+chisq_wald$statistic
+chisq_wald$parameter
+
+chisq_wald <- svychisq(~ edu + gender, hints5_3_lin, statistic = "adjWald")
+chisq_wald$statistic
+chisq_wald$parameter
+```
+
+## Merging HINTS survey iterations
+### Assuming no differences between groups, pp. 52-54
+
+```{r}
+# Cycle 2, 100 replicate weights
+# cycle2a, import Cycle 2 data
+# cycle2b, new replicate weights 1 - 50: copy PERSON_FINWT1 - PERSON_FINWT50 as
+#   Merged_NWGT1 - Merged_NWGT50
+# cycle 2c, new replicate weights 51 - 100: copy PERSON_FINWT0 50 times as 
+#   Merged_NWGT51 - Merged_NWGT100 
+# temp_hints5_cycle2: join cycle2a, cycle2b, cycle2c by PersonID
+cycle2a <- 
+  read_sas(unz("HINTS_5_Cycle_2_SAS_03192020.zip",
+               "HINTS 5- Cycle 2-SAS-03192020/hints5_cycle2_public.sas7bdat")) 
+cycle2b <- cycle2a %>% 
+  select(PersonID, c(paste0("PERSON_FINWT", 0:50))) %>% 
+  mutate(Merged_NWGT0 = PERSON_FINWT0) %>% 
+  select(-PERSON_FINWT0) %>% 
+  rename_at(paste0("PERSON_FINWT", 1:50), ~ paste0("Merged_NWGT", 1:50))  
+cycle2c <- map(1:50, ~ select(cycle2b, PersonID, Merged_NWGT0)) %>% 
+  reduce(inner_join, by = "PersonID") %>% 
+  set_names(c("PersonID", paste0("Merged_NWGT", 51:100)))
+temp_hints5_cycle2 <- list(cycle2a, cycle2b, cycle2c) %>% 
+  reduce(inner_join, by = "PersonID") %>% 
+  mutate(survey = 1) 
+# clean up
+rm(cycle2a, cycle2b, cycle2c)
+
+# Cycle 3, 100 replicate weights
+# cycle3a, import Cycle 3 data
+# cycle3b, new replicate weights 51 - 100: copy TG_all_FINWT1 - TG_all_FINWT50 as
+#   Merged_NWGT51 - Merged_NWGT100
+# cycle 3c, new replicate weights 1 - 50: copy TG_all_FINWT0 50 times as 
+#   Merged_NWGT1 - Merged_NWGT50 
+# temp_hints5_cycle3: join cycle3a, cycle3b, cycle3c by PersonID
+cycle3a <- read_sas(unz("HINTS5_Cycle3_SAS_03112020.zip",
+                         "hints5_cycle3_public.sas7bdat"))
+cycle3b <- cycle3a %>% 
+  select(PersonID, c(paste0("TG_all_FINWT", 0:50))) %>% 
+  mutate(Merged_NWGT0 = TG_all_FINWT0) %>% 
+  select(-TG_all_FINWT0) %>% 
+  rename_at(paste0("TG_all_FINWT", 1:50), ~ paste0("Merged_NWGT", 51:100))
+cycle3c <- map(1:50, ~ select(cycle3b, PersonID, Merged_NWGT0)) %>% 
+  reduce(inner_join, by = "PersonID") %>% 
+  set_names(c("PersonID", paste0("Merged_NWGT", 1:50)))
+temp_hints5_cycle3  <- list(cycle3a, cycle3b, cycle3c) %>% 
+  reduce(inner_join, by = "PersonID") %>% 
+  mutate(survey = 2) 
+rm(cycle3a, cycle3b, cycle3c)
+
+# stack Cycle 2 and Cycle 3 into a single table and create survey object with
+#   the new 100 replicate weights
+# resulting table has 8,942 rows (3,504 for Cycle 2 and 5,438 for Cycle 3)
+#   and 1,016 columns
+#     914 variables appear in either or both of Cycle 2 and Cycle 3
+#     102 added variables: cycle ID, final sample weight, 100 replicate
+#     weights
+mergeHINTSS5C2_HINTS5C3 <- 
+  bind_rows(temp_hints5_cycle2, temp_hints5_cycle3) %>% 
+  # reorder columns to put new weights in front
+  select(survey, PersonID, num_range("Merged_NWGT", 0:100), everything()) %>% 
+  # variable to distinguish survey iterations
+  mutate_at("survey", factor, levels = 1:2,
+            labels = c("HINTS 5 Cycle 2", "HINTS 5 Cycle 3")) %>% 
+  # survey design object
+  as_survey_rep(weights = "Merged_NWGT0",
+                repweights = paste0("Merged_NWGT", 1:100), 
+                type = "JK1", scale = 49/50, mse = TRUE)
+rm(temp_hints5_cycle2, temp_hints5_cycle3)
+
+```
+
+### Frequencies on `SeekHealthInfo` and `ChanceAskQuestions`, p. 54
+
+```{r}
+mergeHINTSS5C2_HINTS5C3 %>% 
+  mutate_at("SeekHealthInfo", factor, labels = c("NA", "Yes", "No")) %>% 
+  group_by(SeekHealthInfo) %>% 
+  summarize(n = unweighted(n()),
+            pct = survey_mean(na.rm = TRUE)) %>% 
+  mutate_at(vars(starts_with("pct")), percent)
+```
+
+
+```{r}
+mergeHINTSS5C2_HINTS5C3 %>%
+  mutate_at("ChanceAskQuestions", factor,
+            labels = c(paste0("NA", 1:5),
+                       "Always", "Usually", "Sometimes", "Never")) %>%
+  group_by(ChanceAskQuestions) %>%
+  summarize(n = unweighted(n()),
+            pct = survey_mean(na.rm = TRUE)) %>%
+  mutate_at(vars(starts_with("pct")), percent)
+```
+
+
+
+
