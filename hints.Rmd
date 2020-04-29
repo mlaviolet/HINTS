@@ -1,6 +1,8 @@
 ---
 title: "HINTS with R"
-author: "ML"
+author: 
+  - name          : "Michael Laviolette, PhD MPH" 
+    email         : "statman54@gmail.com"
 date: "`r format(Sys.time(), '%Y-%m-%d %H:%M')`"
 output: html_document
 ---
@@ -40,7 +42,7 @@ NCI strongly recommends that analysts first assess for possible differences in t
 
 If group differences are not found, the analyst can proceed with analyzing the entire sample. Otherwise the analyst can control for group membership or analyze only a particular group. The data for HINTS 5, Cycle 3 contains several sets of weights appropriate for different analyses. The weights consist of a final sampling weight for point estimates and a series of replicate weights for computing standard errors and confidence intervals. This table lists the weights that are appropriate for particular situations. 
   
-```{r, echo=FALSE}
+```{r wgt_tbl, echo=FALSE}
 data.frame(
   `Analysis data` = c("Combined sample", "Combined sample, controlling for group differences", "Paper only", "Web option", "Web bonus"),
   `Final weight` = c("TG_all_FINWT0", "nwgt0", "TG1_FINWT0", "TG2_FINWT0",
@@ -75,7 +77,7 @@ Most of the work is done by the `survey` and `srvyr` packages. The `survey` pack
 
 HINTS data are provided in three formats: SAS `.sas7bdat` data set, SPSS (`.sav`, `.por`), and Stata (`.dta`, versions prior to 13). All can be imported by R; I'll work with the SAS data. First we import the SAS data set into R using `read_sas()` from the `haven` package, then do some recoding. 
 
-```{r}
+```{r recodes}
 edu_lbl <- c("Less than high school",
              "12 years or completed high school",
              "Some college",
@@ -119,7 +121,7 @@ Standard errors can also be computed with Taylor series linearization. For more,
 
 Using `survey_mean()` from `srvyr` I'll generate a cross-frequency table of education by gender, along with a (Wald) Chi-squared test of independence. First we construct a replicate weights survey object using the `TG_all_FINWT` series of 50 replicate weights.
 
-```{r, warning = FALSE}
+```{r survey_rep, warning = FALSE}
 # construct replicate weights survey object
 hints5_3_rep <- as_survey_rep(hints5_3, weights = "TG_all_FINWT0",
                               repweights = paste0("TG_all_FINWT", 1:50),
@@ -129,7 +131,7 @@ hints5_3_rep <- as_survey_rep(hints5_3, weights = "TG_all_FINWT0",
 
 Now we can generate a table of unweighted sample sizes and percentages of gender within each education level along with confidence intervals.
 
-```{r, warning=FALSE}
+```{r table_1, warning=FALSE}
 tbl_1 <- hints5_3_rep %>% 
   group_by(edu, gender) %>% 
   summarize(n = unweighted(n()),
@@ -144,7 +146,7 @@ tbl_1 %>%
 
 To perform the chi-square test we use `svychisq()` from `survey`. Wald and adjusted Wald tests are available.
 
-```{r}
+```{r chi_sq_rep}
 chisq_test <- svychisq(~ edu + gender, hints5_3_rep, statistic = "Wald")
 chisq_test$statistic
 chisq_test$parameter
@@ -156,11 +158,11 @@ chisq_test2$parameter
 
 Results match the table on page 16.
 
-#### Multivariable logistic regression of gender and education on SeekCancerInfo
+#### Multivariable logistic regression of gender and education on `SeekCancerInfo`
 
-This example illustrates a multivariable logistic regression model using the `svyglm()` function from `survey`. The first argument is a modeling formula, the second is the survey object, and the third specifies a binary response.
+This example illustrates a multivariable logistic regression model using the `svyglm()` function from `survey`. The first argument is a modeling formula, the second is the survey object, and the third specifies a binary response. Store the fitted model in an object so that you can extract fitted values, residuals, and model metrics. For a logistic regression model use the argument `family = "quasibinomial"`. 
 
-```{r}
+```{r logistic}
 model03 <- svyglm(SeekCancerInfo ~ gender + edu, hints5_3_rep, 
                   family = "quasibinomial")
 model03$df.resid
@@ -168,7 +170,7 @@ model03$df.resid
 
 To test for model effects, we use the `regTermTest()` function to test for the significance of terms in the model. The first argument is the model object and the second is the model term. Note the `df = 49` argument that adjusts for the replicate weight design. See the discussion "Denominator Degrees of Freedom (DDF)" in the document on page 12. These results match the "Type 3 Analysis of Effects" table on page 17.
 
-```{r}
+```{r test_terms}
 regTermTest(model03, "gender", df = 49)
 regTermTest(model03, "edu", df = 49)
 
@@ -176,7 +178,7 @@ regTermTest(model03, "edu", df = 49)
 
 To obtain odds ratios with confidence intervals, we exponentiate the model coefficients and interval endpoints. The following code collects these results into a table. Note the `ddf = 49` argument to the `confint` function. Results match the "Odds Ratio Estimates" table on page 18.
 
-```{r}
+```{r odds_ratios}
 # odds ratios
 or_ci <- exp(confint(model03, ddf = 49)) %>% 
   as_tibble(rownames = "name")
@@ -191,18 +193,18 @@ or %>%
 
 ```
 
-#### Multivariable linear regression of gender and education on GeneralHealth
+#### Multivariable linear regression of gender and education on `GeneralHealth`
 
 Although `GeneralHealth` is actually a categorical variable I'll follow the document and treat it as continuous for purposes of discussion. Here's the linear regression model fitting `GeneralHealth` against `Treatment_H5C3`. In the following, omitting the `family` argument defaults to the normal regression model. This code reproduces the results on page 18.
 
-```{r}
+```{r lin_model}
 model04 <- svyglm(GeneralHealth ~ gender + edu, hints5_3_rep)
 tidy(model04) %>% 
   kable() %>% 
   kable_styling()
 ```
 
-```{r}
+```{r chi_sq_lin}
 regTermTest(model04, ~gender + edu)
 regTermTest(model04, "gender")
 regTermTest(model04, "edu")
@@ -213,7 +215,7 @@ regTermTest(model04, "edu")
 
 Replication is the recommended method for variance estimation in HINTS. The variables VAR_CLUSTER and VAR_STRATUM are provided for variance estimation using Taylor series linearization. These variables are provided for users of software packages which don't support replicate weights. The following code constructs the survey object for analyzing the combined sample (no group differences) and replicates the results on pages 20 and 21. Standard errors and confidence intervals differ slightly from those obtained using replicate weights.
 
-```{r, warning=FALSE}
+```{r taylor, warning=FALSE}
 hints5_3_lin <- 
   as_survey_design(hints5_3, ids = VAR_CLUSTER, strata = VAR_STRATUM, 
                    weight = TG_all_FINWT0, nest = TRUE)
@@ -228,21 +230,19 @@ hints5_3_lin %>%
 
 ```
 
-```{r}
+```{r chi_sq_taylor}
 chisq_wald <- svychisq(~ edu + gender, hints5_3_lin, statistic = "Wald")
 chisq_wald$statistic
 chisq_wald$parameter
-```
 
-```{r}
 chisq_wald <- svychisq(~ edu + gender, hints5_3_lin, statistic = "adjWald")
 chisq_wald$statistic
 chisq_wald$parameter
 ```
 
-# RESUME HERE
+To assess for differences across modality groups, create a survey object `hints5_3_grp` that uses `nwgt0` as the sampling weight and `nwgt1` through `nwgt150` as replicate weights. Then fit a regression model using the variable of interest as the response and the group variable `Treatment_H5C3` as the covariate.
 
-To assess for differences across modality groups, I'll create a survey object `hints5_3_grp` that uses `nwgt0` as the sampling weight and `nwgt1` through `nwgt150` as replicate weights.
+## Assessing differences across groups, binary outcome
 
 #### Page 8
 
@@ -254,28 +254,29 @@ hints5_3_grp <- as_survey_rep(hints5_3, weights = "nwgt0",
 
 ### Assessing for differences across groups, binary outcome
 
-To fit a regression model we use `svyglm()` from `survey`. The first argument is a modeling formula; the second is the survey object. For a logistic regression model use the argument `family = "quasibinomial"`. Store the results in an object so that you can extract fitted values, residuals, and model metrics.
+This model tests for differences across groups in the binary outcome `SeekCancerInfo`.
 
 ```{r}
 model01 <- svyglm(SeekCancerInfo ~ Treatment_H5C3, hints5_3_grp, 
                   family = "quasibinomial") 
 summary(model01)
-```
-
-Note that "Paper only" is the referent because it's the first level of `Treatment_H5C3`. The results indicate no significant differences in `SeekCancerInfo` between the treatment groups. We can also test for the effect of `Treatment_H5C3` with the function `regTermTest()`, which tests the significance of a term or terms in a model.
-
-```{r}
 regTermTest(model01, "Treatment_H5C3")
 ```
 
+Note that "Paper only" is the referent because it's the first level of `Treatment_H5C3`. The results indicate no significant differences in `SeekCancerInfo` between the treatment groups.
+
 ### Assessing for differences across groups, continuous outcome
+
+This model tests for differences across groups in the outcome `GeneralHealth`, considered as continuous.
 
 ```{r}
 model02 <- svyglm(GeneralHealth ~ Treatment_H5C3, hints5_3_grp)
 summary(model02)
+regTermTest(model02, "Treatment_H5C3")
 
 ```
 
+# RESUME HERE
 
 ### If group differences are found
 

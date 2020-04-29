@@ -1,6 +1,8 @@
 ---
 title: "HINTS with R"
-author: "Michael Laviolette"
+author: 
+  - name          : "Michael Laviolette, PhD MPH" 
+    email         : "statman54@gmail.com"
 date: "`r format(Sys.time(), '%Y-%m-%d %H:%M')`"
 output: html_document
 ---
@@ -10,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 options(digits = 4)
 ```
 
-Page citations refer to "Overview of the Hints 5 Cycle 3 Survey and Data Analysis Recommendations."
+Page citations refer to ["Overview of the Hints 5 Cycle 3 Survey and Data Analysis Recommendations"](https://hints.cancer.gov/dataset/HINTS5_Cycle3_SAS_03112020.zip).
 
 ```{r load-pkgs, message=FALSE}
 library(broom)
@@ -56,7 +58,7 @@ hints5_3 <- read_sas(unz("HINTS5_Cycle3_SAS_03112020.zip",
   mutate_at("SeekCancerInfo", factor, 2:1, c("No", "Yes"))
 ```
 
-## Assessing for differences across groups, binary outcome, p. 8
+## Assessing differences across groups, binary outcome, p. 8
 
 ```{r}
 hints5_3_grp <- as_survey_rep(hints5_3, weights = "nwgt0", 
@@ -68,7 +70,7 @@ regTermTest(model01, "Treatment_H5C3")
 
 ```
 
-## Assessing for differences across groups, continuous outcome, p. 8
+## Assessing differences across groups, continuous outcome, p. 8
 
 ```{r}
 model02 <- svyglm(GeneralHealth ~ Treatment_H5C3, hints5_3_grp)
