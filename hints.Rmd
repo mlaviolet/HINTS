@@ -240,7 +240,7 @@ chisq_wald$statistic
 chisq_wald$parameter
 ```
 
-To assess for differences across modality groups, create a survey object `hints5_3_grp` that uses `nwgt0` as the sampling weight and `nwgt1` through `nwgt150` as replicate weights. Then fit a regression model using the variable of interest as the response and the group variable `Treatment_H5C3` as the covariate.
+To assess for differences across modality groups, create a survey object `hints5_3_grp` that uses `nwgt0` as the sampling weight and `nwgt1` through `nwgt150` as replicate weights. Then fit a regression model using the variable of interest as the response and the group variable `Treatment_H5C3` as the covariate. Since the survey function `svychisq()` currently supports only two-way tables, use `regTermTest()` to test for group effect.
 
 ## Assessing differences across groups, binary outcome
 
@@ -276,41 +276,39 @@ regTermTest(model02, "Treatment_H5C3")
 
 ```
 
-# RESUME HERE
-
 ### If group differences are found
 
-### Option A: Use the combined sample and control for group assignment
+#### Option A: Use the combined sample and control for group assignment
 
-```{r}
-# ADD EXAMPLE MODEL WITH PREDICTORS
-# model00 <- svyglm(SeekCancerInfo ~ Treatment_H5C3 + [INSERT CONVARIATES],
-#                   hints5_3_grp, 
-#        family = "quasibinomial") 
-# summary(model00)
+```{r control_for_group, eval=FALSE}
+# predictor1 and predictor2 are placeholders
+model00 <- 
+  svyglm(SeekCancerInfo ~ Treatment_H5C3 + predictor1 + predictor2 + ...,
+                 hints5_3_grp, family = "quasibinomial") 
 ```
 
-The survey function `svychisq()` currently supports only two-way tables.
-
-ADD EXAMPLE USING regTermtest() to assess group differences
-
-##### Option B: Use one group only, without accounting for group differences
+#### Option B: Use one group only, without accounting for group differences
  
-```{r}
-# using "Paper Only" group
+```{r one_group_only, eval=FALSE}
+# using "Paper only" group
 hints5_3_paper <- hints5_3 %>% 
   filter(Treatment_H5C3 == "Paper only") %>% 
   as_survey_rep(weights = "TG1_FINWT0",
-                repweights = paste0("TG1_FINWT", 1:50), # df = 49,
+                repweights = paste0("TG1_FINWT", 1:50,
                 type = "JK1", scale = 49/50, mse = TRUE)
-nrow(hints5_3_paper)
-# ADD EXAMPLE MODEL WITH PREDICTORS
+
+model00 <- 
+  svyglm(SeekCancerInfo ~ Treatment_H5C3 + predictor1 + predictor2 + ...,
+                 hints5_3_grp, family = "quasibinomial") 
 
 ```
 
+# RESUME HERE
+
 ## Merging HINTS survey iterations
 
-### Assuming no differences between groups
+### Merging HINTS 5, Cycles 2 and 3 assuming no differences between groups
+
 ```{r}
 # Cycle 2, 100 replicate weights
 # cycle2a, import Cycle 2 data
@@ -380,6 +378,7 @@ rm(temp_hints5_cycle2, temp_hints5_cycle3)
 
 ```
 
+Replicate results obtained from SAS code
 
 ```{r}
 mergeHINTSS5C2_HINTS5C3 %>% 
@@ -402,33 +401,14 @@ mergeHINTSS5C2_HINTS5C3 %>%
   mutate_at(vars(starts_with("pct")), percent)
 ```
 
+### Merging HINTS 5, Cycles 2 and 3 controlling for differences between groups
 
-
-
-
+"An analyst might find that there are group differences on the variables of interest in HINTS 5 Cycle 3. In this case, the analyst would need to create a new variable in both data files that would allow the analyst to differentiate between the 4 groups (HINTS 5 Cycle 2, HINTS 5 Cycle 3 [H5C3] Paper Only, H5C3 Web Option, and H5C3 Web Bonus groups). Next, the analyst will need to use the Rizzo, et al., (2008) method to create 200 replicate weights."
 
 ## Conclusion
 
 
 
-
-
-## Extras
-
-## Group Diffferences Are Significant
-
-In this case the group differences are not significant. If they were, one approach would be to control for group differences by including `Treatment_H5C3` in the model of interest. The appropriate survey object uses the `hints5_3_grp` object with 150 replicate weights. 
-
-## Group Differences Not Significant
-
-If group differences are not significant we can use the sample including all three groups. We need a different set of weights. For estimates using all groups use the weights `TG_all_FINWT0` through `TG_all_FINWT50`.
-
-```{r}
-hints5_3_all <- hints5_3 %>% 
-  as_survey_rep(weights = "TG_all_FINWT0",
-                repweights = paste0("TG_all_FINWT", 1:50), 
-                type = "JK1", scale = 49/50, mse = TRUE)
-```
 
 
 
