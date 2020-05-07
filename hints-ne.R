@@ -71,18 +71,23 @@ rm(hints5_3, cycle3b, cycle3c)
 #     914 variables appear in either or both of Cycle 2 and Cycle 3
 #     102 added variables: cycle ID, final sample weight, 100 replicate
 #     weights
-mergeHINTSS5C2_HINTS5C3 <- 
-  bind_rows(temp_hints5_cycle2, temp_hints5_cycle3) %>% 
+# mergeHINTSS5C2_HINTS5C3 <- 
+hints_svy <- bind_rows(temp_hints5_cycle2, temp_hints5_cycle3) %>% 
   # reorder columns to put new weights in front
   select(survey, PersonID, num_range("Merged_NWGT", 0:100), everything()) %>% 
   # variable to distinguish survey iterations
   mutate_at("survey", factor, levels = 1:2,
             labels = c("HINTS 5 Cycle 2", "HINTS 5 Cycle 3")) %>% 
+  mutate_at("CENSDIV", factor, labels = division_lbl) %>% 
   # survey design object
   as_survey_rep(weights = "Merged_NWGT0",
                 repweights = paste0("Merged_NWGT", 1:100), 
                 type = "JK1", scale = 49/50, mse = TRUE)
 rm(temp_hints5_cycle2, temp_hints5_cycle3)
+
+hints_svy %>% 
+  group_by(CENSDIV) %>% 
+  summarize(n = unweighted(n()))
 
 
 
