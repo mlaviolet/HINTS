@@ -50,7 +50,8 @@ cycle3a <- read_sas(unz("HINTS5_Cycle3_SAS_03112020.zip",
 # final sampling weight and replicate weights 101-150
 cycle3b <- cycle3a %>% 
   select(PersonID, c(paste0("TG_all_FINWT", 0:50))) %>% 
-  rename_at(paste0("TG_all_FINWT", 0:50), ~ paste0("Merged_NWGT", c(0, 101:150))) 
+  rename_at(paste0("TG_all_FINWT", 0:50), 
+            ~ paste0("Merged_NWGT", c(0, 101:150))) 
 # replicate weights 1-100
 cycle3c <- map(1:100, ~ select(cycle3b, PersonID, Merged_NWGT0)) %>% 
   reduce(inner_join, by = "PersonID") %>% 
