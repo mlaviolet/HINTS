@@ -1,20 +1,19 @@
-DATA hints5_cycle3;
-SET hints5_cycle3;
- Format
+DATA hints5_cycle1;
+SET hints5_cycle1;
+format
+
             Stratum                         $Stratum.
             APP_REGION                      $APP_REG.
-            DRA                                 DRA.
             HIGHSPANLI                      HIGHSPAN.
             HISPSURNAME                     HIGHSPAN.
             HISP_HH                         HIGHSPAN.
             RUC2003                         RUC2003F.
             RUC2013                         RUC2013F.
-            PR_RUCA_2010                    PR_RUCA_.
+            PR_RUCA_2010                    PR_RUCAF.
             SEC_RUCA_2010                   SEC_RUC.
             NCHSURCODE2013                  NCHSURCO.
-            CENSDIV                          CENSDIV.
+            CENSDIV                         CENSDIV.
             CENSREG                          CENSREG.
-            VAR_STRATUM                     VAR_STR.
             FormType                        FormType.
             Language_Flag                   Language.
             QDisp                              QDisp.
@@ -26,46 +25,50 @@ SET hints5_cycle3;
             WhoLookingFor                   WhoLook.
             LotOfEffort                     LotOfEf.
             Frustrated                      LotOfEf.
-            ConfidentGetHealthInf           Confide.
+            ConcernedQuality                LotOfEf.
+            TooHardUnderstand               LotOfEf.
+            ConfidentGetHealthInf           ConfidF.
             TrustDoctor                     TrustDo.
             TrustFamily                     TrustDo.
+            TrustNewsMag                    TrustDo.
+            TrustRadio                      TrustDo.
+            TrustInternet                   TrustDo.
+            TrustTelevision                 TrustDo.
             TrustGov                        TrustDo.
             TrustCharities                  TrustDo.
             TrustReligiousOrgs              TrustDo.
-            StrongNeedHealthInfo            StrongF.
+            StrongNeedHealthInfo            StrongG.
             StrongNeedHealthInfo_OS         $StrongN.
             SeekCancerInfo                  SeekCan.
+            InternetCancerInfoSelf          SeekCan.
             UseInternet                     UseInte.
             Internet_DialUp                 Interne.
             Internet_BroadBnd               Interne.
             Internet_Cell                   Interne.
             Internet_WiFi                   Interne.
-            InternetCancerInfoSelf          Interne.
             WhereUseInternet_Home           WhereUs.
             WhereUseInternet_Work           WhereUs.
+            WhereUseInternet_School         WhereUs.
             WhereUseInternet_PublicPlace    WhereUs.
             WhereUseInternet_MobileDevice   WhereUs.
+            WhereUseInternet_GamingDevice   WhereUs.
             Electronic_SelfHealthInfo       SeekCan.
+            Electronic_HealthInfoSE         SeekCan.
             Electronic_BuyMedicine          SeekCan.
+            Electronic_HCPSearch            SeekCan.
             Electronic_TalkDoctor           SeekCan.
-            Electronic_TrackedHealthCosts   SeekCan.
-            Electronic_TestResults          SeekCan.
             Electronic_MadeAppts            SeekCan.
-            Electronic_ECigHarms            SeekCan.
+            Electronic_TrackedHealthCosts   SeekCan.
+            Electronic_CompletedForms       SeekCan.
+            Electronic_TestResults          SeekCan.
             HaveDevice_Tablet               HaveDev.
             HaveDevice_SmartPh              HaveDev.
-            HaveDevice_CellPh               HaveDeF.
-            HaveDevice_None                 HaveDeF.
-            HaveDevice_Cat                  HaveDeG.
+            HaveDevice_CellPh               HaveDev.
             TabletHealthWellnessApps        TabletH.
             Tablet_AchieveGoal              Tablet_.
             Tablet_MakeDecision             Tablet_.
             Tablet_DiscussionsHCP           Tablet_.
-            WearableDevTrackHealth          Wearabl.
-            FreqWearDevTrackHealth          FreqWea.
-            WillingShareData_HCP            Willing.
-            WillingShareData_Fam            Willing.
-            OtherDevTrackHealth2            SeekCan.
+            OtherDevTrackHealth             SeekCan.
             SharedHealthDeviceInfo          SharedH.
             IntRsn_VisitedSocNet            SeekCan.
             IntRsn_SharedSocNet             SeekCan.
@@ -74,10 +77,8 @@ SET hints5_cycle3;
             IntRsn_YouTube                  SeekCan.
             TextFromDoctor                  TextFro.
             RegularProvider                 SeekCan.
+            MostRecentCheckup2              MostRec.
             FreqGoProvider                  FreqGoP.
-            QualityCare                     Quality.
-            FreqGoUrgentCare                FreqGoU.
-            QualityCareUrgentCare           QualitF.
             ChanceAskQuestions              ChanceA.
             FeelingsAddressed               ChanceA.
             InvolvedDecisions               ChanceA.
@@ -85,6 +86,11 @@ SET hints5_cycle3;
             ExplainedClearly                ChanceA.
             SpentEnoughTime                 ChanceA.
             HelpUncertainty                 ChanceA.
+            QualityCare                     Quality.
+            ProbCare_BringTest              ProbCar.
+            ProbCare_WaitLong               ProbCar.
+            ProbCare_RedoTest               ProbCar.
+            ProbCare_ProvideHist            ProbCar.
             HealthIns_InsuranceEmp          SeekCan.
             HealthIns_InsurancePriv         SeekCan.
             HealthIns_Medicare              SeekCan.
@@ -93,143 +99,122 @@ SET hints5_cycle3;
             HealthIns_VA                    SeekCan.
             HealthIns_IHS                   SeekCan.
             HealthIns_Other                 HealthF.
-            HealthIns_Other_OS              $HealthI.
+            HealthIns_Other_OS              HealthI.
             HealthInsurance                 SeekCan.
             ProviderMaintainEMR2            TextFro.
             OfferedAccessHCP2               TextFro.
             OfferedAccessInsurer2           TextFro.
+            HCPEncourageOnlineRec           SeekCan.
             AccessOnlineRecord              AccessO.
             NotAccessed_SpeakDirectly       NotAcce.
             NotAccessed_NoInternet          NotAcce.
             NotAccessed_NoNeed              NotAcce.
             NotAccessed_ConcernedPrivacy    NotAcce.
             NotAccessed_NoRecord            NotAcce.
-            NotAccessed_LogInProb           NotAcce.
-            NotAccessed_Uncomfortable       NotAcce.
-            NotAccessed_MultipleRec         NotAcce.
+            NotAccessed_Other               NotAccF.
+            NotAccessed_Other_OS            $NotAccG.
+            RecordsOnline_Labs              RecordF.
+            RecordsOnline_Meds              RecordF.
+            RecordsOnline_HealthProbs       RecordF.
+            RecordsOnline_Allergies         RecordF.
+            RecordsOnline_VisitSummary      RecordF.
+            RecordsOnline_ClinNotes         RecordF.
+            RecordsOnline_Immunizations     RecordF.
+            RecordsOnline_MakeAppt          Records.
             RecordsOnline_RefillMeds        Records.
-            RecordsOnline_ViewResults       Records.
+            RecordsOnline_Paperwork         Records.
             RecordsOnline_RequestCorrection Records.
             RecordsOnline_MessageHCP        Records.
+            RecordsOnline_ViewResults       Records.
+            RecordsOnline_MonitorHealth     Records.
             RecordsOnline_DownloadHealth    Records.
             RecordsOnline_AddHealthInfo     Records.
             RecordsOnline_MakeDecision      Records.
-            AccessUsingHealthApp            AccessU.
-            OnlineRecClinNotes              AccessU.
             ESent_AnotherHCP                Records.
             ESent_Family                    Records.
             ESent_HealthApp                 Records.
             UnderstandOnlineMedRec          Underst.
             UsefulOnlineMedRec              UsefulO.
-            Caregiving_Child                CaregiL.
-            Caregiving_Spouse               CaregiL.
-            Caregiving_Parent               CaregiL.
-            Caregiving_AnotherFam           CaregiL.
-            Caregiving_Friend               CaregiL.
-            Caregiving_No                   CaregiM.
-            CaregivingWho_Cat               CaregiN.
-            Caregiving_Professional         CaregiF.
-            Caregiving_HoursPerWeek2        Caregiv.
-            Caregiving_Cancer               CaregiH.
-            Caregiving_Alzheimers           CaregiH.
-            Caregiving_OrthoMusc            CaregiH.
-            Caregiving_MentalHealth         CaregiH.
-            Caregiving_ChronicCond          CaregiH.
-            Caregiving_NeuroDev             CaregiH.
-            Caregiving_AcuteCond            CaregiH.
-            Caregiving_Aging                CaregiH.
-            Caregiving_NotSure              CaregiH.
-            Caregiving_Other                CaregiI.
-            Caregiving_Other_OS             $CaregiK.
-            CaregivingCond_Cat              CaregiJ.
-            Caregiving_AccessMedRec         CaregiG.
+            ConfidentInfoSafe               Confide.
+            WithheldInfoPrivacy             SeekCan.
+            ElectInfoSafe                   ElectIn.
+            AccessFamilyMedRec              AccessF.
+            AccessedFamRec_TheirPwd         Accesse.
+            AccessedFamRec_MyPwd            Accesse.
+            Caregiving_Child                CaregiJ.
+            Caregiving_Spouse               CaregiJ.
+            Caregiving_Parent               CaregiJ.
+            Caregiving_Family               CaregiJ.
+            Caregiving_Friend               CaregiJ.
+            Caregiving_No                   CaregiK.
+            CaregivingWho_Cat               CaregiL.
+            Caregiving_Cancer               Caregiv.
+            Caregiving_Alzheimers           Caregiv.
+            Caregiving_OrthoMusc            Caregiv.
+            Caregiving_MentalHealth         Caregiv.
+            Caregiving_ChronicCond          Caregiv.
+            Caregiving_NeuroDev             Caregiv.
+            Caregiving_AcuteCond            Caregiv.
+            Caregiving_Aging                Caregiv.
+            Caregiving_NotSure              Caregiv.
+            Caregiving_Other                CaregiF.
+            Caregiving_Other_OS             $CaregiI.
+            CaregivingCond_Cat              CaregiH.
+            Caregiving_HoursPerWeek         CaregiG.
+            HeardDNATest                    HeardDN.
+            GeneticTestUse_DetermineRisk    Genetic.
+            GeneticTestUse_DetermineTx      Genetic.
+            GeneticTestUse_DetermineMed     Genetic.
+            GeneticTestUse_DeterminePass    Genetic.
+            GeneticTestUse_Cat              GenetiF.
+            HadTest_Paternity               Genetic.
+            HadTest_Ancestry                Genetic.
+            HadTest_DNAFing                 Genetic.
+            HadTest_CFCarrier               Genetic.
+            HadTest_BRCA                    Genetic.
+            HadTest_Lynch                   Genetic.
+            HadTest_None                    Genetic.
+            HadTest_NotSure                 Genetic.
+            HadTest_Other                   HadTest.
+            HadTest_Other_OS                $HadTesG.
+            HadTest_Cat                     HadTesF.
             GeneralHealth                   General.
-            OwnAbilityTakeCareHealth        Confide.
-            AvoidDoc                        AvoidDo.
-            Deaf                            SeekCan.
-            TalkHealthFriends               SeekCan.
+            OwnAbilityTakeCareHealth        ConfidF.
             MedConditions_Diabetes          SeekCan.
             MedConditions_HighBP            SeekCan.
             MedConditions_HeartCondition    SeekCan.
             MedConditions_LungDisease       SeekCan.
+            MedConditions_Arthritis         SeekCan.
             MedConditions_Depression        SeekCan.
             Height_Feet                     HeightF.
             Height_Inches                   Height_.
             Weight                           Weight.
-            WeightPerception                WeightP.
-            WeightIntention                 WeightI.
             LittleInterest                  LittleI.
             Hopeless                        LittleI.
             Nervous                         LittleI.
             Worrying                        LittleI.
-            ChangeThinking                  ChangeT.
-            ConsiderFuture                  ChangeT.
+            EmotionalSupport                SeekCan.
+            TalkHealthFriends               SeekCan.
+            HelpDailyChores                 SeekCan.
+            Deaf                            SeekCan.
+            UseMenuCalorieInfo              UseMenu.
             Fruit                             Fruit.
             Vegetables                        Fruit.
-            AverageCaloriesPerDay           Average.
-            AverageCaloriesPerDay_DK        AveragF.
-            NoticeCalorieInfoOnMenu         NoticeC.
-            UnderstandCalorieInfo           UndersF.
-            CalorieInfo_FewerCalories       Calorie.
-            CalorieInfo_MoreCalories        Calorie.
-            CalorieInfo_FewerItems          Calorie.
-            CalorieInfo_SmallerSizes        Calorie.
-            CalorieInfo_MoreItems           Calorie.
-            CalorieInfo_LargerSizes         Calorie.
-            DrinkDaysPerWeek                DrinkDa.
-            DrinksPerDay                    DrinksP.
             AlcoholConditions_Cancer        Alcohol.
             AlcoholConditions_HeartDisease  Alcohol.
             AlcoholConditions_Diabetes      Alcohol.
+            AlcoholConditions_Cholesterol   Alcohol.
             AlcoholConditions_LiverDisease  Alcohol.
-            HCPAlcoholConsequences          HCPAlco.
+            AlcoholConditions_Overweight    Alcohol.
+            AlcoholIncreaseCancer           AlcohoF.
+            AlcoholReduceHeart              AlcohoF.
             TimesModerateExercise           TimesMo.
-            HowLongModerateExerciseMinutes  HowLong.
+            HowLongModerateExerciseMn       HowLonF.
+            HowLongModerateExerciseHr       HowLong.
             TimesStrengthTraining           TimesSt.
-            AverageTimeSitting              AveragH.
-            EnjoyExercise                   EnjoyEx.
-            RegExercise_Pressure            EnjoyEx.
-            RegExercise_Appearance          EnjoyEx.
-            RegExercise_Guilt               EnjoyEx.
-            RegExercise_Enjoyment           EnjoyEx.
-            GovPARec_HCP                    SeekCan.
-            GovPARec_Internet               SeekCan.
-            GovPARec_TV                     SeekCan.
-            GovPARec_Magazine               SeekCan.
-            ExRec_IncreasedEx               CaregiL.
-            ExRec_DecreasedEx               CaregiL.
-            ExRec_ChangedEx                 CaregiL.
-            ExRec_LookedInfo                CaregiL.
-            ExRec_NoChange                  CaregiL.
-            ExRec_NotHeard                  CaregiL.
-            ExRec_Cat                       ExRec_C.
-            PhysAct_HelpSleep               PhysAct.
-            PhysAct_ReduceAnxiety           PhysAct.
-            PhysAct_ReducePain              PhysAct.
-            AverageSleepNight               AveragG.
-            AverageSleepQuality             AveragI.
-            MorningNightPerson              Morning.
-            SpendTimeInSunTanning           SpendTi.
-            EnjoyTimeInSun                  EnjoyEx.
-            TimesSunburned                  TimesSu.
-            Sunburned_JobOutside            Sunburn.
-            Sunburned_HomeOutside           Sunburn.
-            Sunburned_Sunbathing            Sunburn.
-            Sunburned_Swimming              Sunburn.
-            Sunburned_Exercise              Sunburn.
-            Sunburned_SportingEvent         Sunburn.
-            Sunburned_OutdoorEvent          Sunburn.
-            Sunburned_DayToDay              Sunburn.
-            Sunburned_Other                 Sunburn.
-            Sunburned_DK                    Sunburn.
-            SunburnedAct_Cat                SunburH.
-            Sunburned_SPF15                 Sunburn.
-            Sunburned_ProtClothing          Sunburn.
-            Sunburned_Shade                 Sunburn.
-            Sunburned_None                  Sunburn.
-            Sunburned_DontRemember          Sunburn.
-            SunburnedProt_Cat               SunburG.
-            Sunburned_Alcohol               SunburF.
+            TanningBed                      Tanning.
+            SkinCancerHPExam                SkinCaF.
+            SkinCancerSelfCheck             SkinCan.
             Smoke100                        Smoke1F.
             SmokeNow                        SmokeNo.
             TriedQuit                       TriedQu.
@@ -237,31 +222,25 @@ SET hints5_cycle3;
             ElectCigLessHarm                ElectCi.
             UsedECigEver                    UsedECi.
             UseECigNow                      UseECig.
-            SmokeDayECig                    SmokeDa.
-            NicotineWantSmoke               Nicotin.
-            NicotineCauseCancer             Nicotin.
-            NicotineAddictionConcern        Nicotin.
-            LowNicotineHarmful              LowNicF.
-            LowNicotineAddictive            LowNico.
-            SeenFederalCourtTobaccoMessages2 SeenFed.
-            TobaccoMessages_HESmoking       Tobacco.
-            TobaccoMessages_HESecondhand    Tobacco.
-            TobaccoMessages_Addictiveness   Tobacco.
-            TobaccoMessages_EnhanceDelivery Tobacco.
-            TobaccoMessages_LowTarLight     Tobacco.
-            TobaccoMessages_Cat             TobaccF.
+            DrTalkLungTest                  Alcohol.
+            SmokelessLessHarm               Smokele.
+            HookahLessHarm                  HookahL.
             GenderC                         GenderC.
-            EverHadPSATest                  EverHad.
             WhenPapTest                     WhenPap.
             WhenMammogram                   WhenMam.
-            EverTestedColonCa               SeekCan.
-            HeardHepC                       SeekCan.
+            EverHadPSATest                  EverHad.
             HeardHPV                        HeardHP.
             HPVCauseCancer_Cervical         HPVCaus.
             HPVCauseCancer_Penile           HPVCaus.
             HPVCauseCancer_Anal             HPVCaus.
             HPVCauseCancer_Oral             HPVCaus.
+            HPVSTD                           HPVSTD.
+            HPVMedicalTreatment             HPVMedi.
             HeardHPVVaccine2                SeekCan.
+            HPVShotPrevent                  HPVShot.
+            FamBetween9and27                FamBetw.
+            DiscussHPVVaccination12m        Discuss.
+            RecommendHPVShot                Discuss.
             EverHadCancer                   EverHaF.
             CaBladder                       CaBladd.
             CaBone                          CaBladd.
@@ -270,12 +249,12 @@ SET hints5_cycle3;
             CaColon                         CaBladd.
             CaEndometrial                   CaBladd.
             CaHeadNeck                      CaBladd.
+            CaHodgkins                      CaBladd.
             CaLeukemia                      CaBladd.
             CaLiver                         CaBladd.
             CaLung                          CaBladd.
-            CaHodgkins                      CaBladd.
-            CaNonHodgkin                    CaBladd.
             CaMelanoma                      CaBladd.
+            CaNonHodgkin                    CaBladd.
             CaOral                          CaBladd.
             CaOvarian                       CaBladd.
             CaPancreatic                    CaBladd.
@@ -289,20 +268,44 @@ SET hints5_cycle3;
             CaOther_OS                      $CaOtheF.
             Cancer_Cat                      Cancer_.
             WhenDiagnosedCancer             WhenDia.
+            UndergoCancerTreatment          Undergo.
+            CancerTx_Chemo                  CancerT.
+            CancerTx_Radiation              CancerT.
+            CancerTx_Surgery                CancerT.
+            CancerTx_Other                  CancerT.
+            HowLongFinishTreatment_Cat      HowLonH.
+            CancerTxSummary                 CancerF.
+            CancerDeniedCoverage            CancerD.
+            CancerHurtFinances              CancerH.
+            CancerAbilityToWork             CancerA.
+            ClinicalTrialCancerTx           Clinica.
+            DiscussedClinicalTrial          DiscusF.
+            ChanceGetCancer                 ChanceG.
+            EverythingCauseCancer           AlcohoF.
+            PreventNotPossible              AlcohoF.
+            TooManyRecommendations          AlcohoF.
+            CancerMoreCommon                AlcohoF.
+            CancerFatal                     AlcohoF.
+            RatherNotKnowChance             AlcohoF.
+            FreqWorryCancer                 FreqWor.
             FamilyEverHadCancer             FamilyE.
-            EverythingCauseCancer           ChangeT.
-            PreventNotPossible              ChangeT.
-            TooManyRecommendations          ChangeT.
-            CancerSign_UnexpBleeding        TextFro.
-            CancerSign_BowelBladderChange   TextFro.
-            CancerSign_UnexpWeightLoss      TextFro.
-            InfluenceCancer_Obesity         Influen.
-            InfluenceCancer_EatingFiber     Influen.
-            InfluenceCancer_ProcessedMeat   Influen.
-            InfluenceCancer_EatingFruitVeg  Influen.
             Age                                 Age.
+            OccupationStatus                OccupaF.
+            OccupationStatus_OS             $Occupat.
+            Employed                        Employe.
+            Unemployed                      Employe.
+            Homemaker                       Employe.
+            Student                         Employe.
+            Retired                         Employe.
+            Disabled                        Employe.
+            OtherOcc                        Employe.
+            MultiOcc                        MultiOc.
+            ActiveDutyArmedForces           ActiveD.
+            ReceivedCareVA                  Receive.
             MaritalStatus                   Marital.
             Education                       Educati.
+            BornInUSA                       BornInU.
+            YearCameToUSA                   YearCam.
             SpeakEnglish                    SpeakEn.
             NotHisp                         NotHisp.
             Mexican                         NotHisp.
@@ -334,43 +337,43 @@ SET hints5_cycle3;
             SelfAge                         SelfAge.
             SelfMOB                         SelfMOB.
             HHAdultGender2                  HHAdulM.
-            HHAdultAge2                     HHAdulH.
+            HHAdultAge2                     HHAdult.
             HHAdultMOB2                     HHAdulI.
             HHAdultGender3                  HHAdulN.
-            HHAdultAge3                     HHAdult.
+            HHAdultAge3                     HHAdulF.
             HHAdultMOB3                     HHAdulJ.
             HHAdultGender4                  HHAdulO.
-            HHAdultAge4                     HHAdulF.
+            HHAdultAge4                     HHAdulG.
             HHAdultMOB4                     HHAdulK.
             HHAdultGender5                  HHAdulP.
-            HHAdultAge5                     HHAdulG.
+            HHAdultAge5                     HHAdulH.
             HHAdultMOB5                     HHAdulL.
-            HHAdultGender6                  HHAdulA.
-            HHAdultAge6                     HHAdulB.
-            HHAdultMOB6                     HHAdulC.
             ChildrenInHH                    Childre.
             RentOrOwn                       RentOrO.
+            CellPhone                       HaveDev.
+            PhoneInHome                     HaveDev.
             IncomeRanges                    IncomeR.
-            IncomeFeelings                  IncomeF.
-            Prompt                          PromptF.
-			IncomeRanges_IMP				IncomeR.
+            MailSurveyTime_Min              MailSuF.
+            MailSurveyTime_Hrs              MailSur.
+            TypeOfAddressA                  TypeOfA.
+            TypeOfAddressB                  TypeOfA.
+            TypeOfAddressC                  TypeOfA.
+            TypeOfAddressD                  TypeOfA.
 			AgeGrpA 						AgeGrpA.
-			AgeGrpB							AgeGrpB.
-			EducA							EducA.
+			AgeGrpB 						AgeGrpB.
+			EducA 							EducA.
 			EducB							EducB.
-			RaceEthn						RaceEthn.
-			RaceEthn5						RaceEthn5f.
-			HHInc							HHInc.
-			BMI								BMI.
-			AgeDX							AgeDX.
-			TimeSinceDX						TimeSinceDX.
-			smokeStat						smokeStat.
-			phq4							phq4f.
-			ecigUse							ecigUse.
-			AvgDrinksPerWeek				AvgDrinksPerWeek.
-			Treatment_H5C3					Treatment_H5C3f.
-			WeeklyMinutesModerateExercise	WeeklyMinutesModerateExercise.	
-			ChanceGetCancerNoDX             ChanceG.
-            FreqWorryCancerNoDX             FreqWor.	
-;
+			RaceEthn 						RaceEthn.
+			HHInc 							HHInc.
+			BMI 							BMI.
+			AgeDX 							AgeDX.
+			TimeSinceDX 					TimeSinceDX.
+			smokeStat 						smokeStat.
+			RaceEthn5 						RaceEthn5f.
+			phq4 							phq4f.
+			WeeklyMinutesModerateExercise  	WeeklyMinutesModerateExercise.
+            IncomeRanges_IMP  				incomer.
+			ECigUse 						ECigStat.
+
+        ;
 run;

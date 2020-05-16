@@ -1,4 +1,5 @@
-proc format library=library cntlout = library.fmt_53;
+* proc format library=library cntlout = library.fmt_53;
+proc format;
         Value $Stratum
             "CA" = "Appalachia Stratum"
             "HM" = "High Minority Areas"

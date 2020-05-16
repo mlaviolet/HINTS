@@ -196,21 +196,31 @@ cycle3 <- list(cycle3a, cycle3b, cycle3c) %>%
   mutate(survey = 3)
 rm(cycle3a, cycle3b, cycle3c)
 
+treatment_lbl <- c("Paper only", "Web option", "Web bonus")
 hints5_svy_with_diff <- bind_rows(cycle1, cycle2, cycle3) %>% 
-  # reorder columns to put new weights in front
-  select(survey, PersonID, num_range("Merged_NWGT", 0:250), everything()) %>% 
-  # variable to distinguish survey iterations
+  # add variable to distinguish surveys and modalities
+  # Cycles 1 and 2 were paper only; Cycle 3 was paper and online
+  mutate(treatment = case_when(
+    survey == 1 ~ 1,
+    survey == 2 ~ 1,
+    survey == 3 & Treatment_H5C3 == 1 ~ 1,
+    survey == 3 & Treatment_H5C3 == 2 ~ 2,
+    survey == 3 & Treatment_H5C3 == 3 ~ 3)) %>% 
   mutate_at("survey", factor, 1:3, paste("HINTS 5 Cycle", 1:3)) %>% 
-  mutate_at("Treatment_H5C3", factor, 1:3, 
-            c("Paper only", "Web option", "Web bonus")) %>% 
+  mutate_at("treatment", factor, 1:3, treatment_lbl) %>% 
+  # reorder columns to put treatment and new weights in front
+  select(survey, treatment, PersonID, num_range("Merged_NWGT", 0:250), 
+         everything()) %>% 
+  # create replicate weight survey object
   as_survey_rep(weights = "Merged_NWGT0",
                 repweights = paste0("Merged_NWGT", 1:250), 
                 type = "JK1", scale = 49/50, mse = TRUE)
 rm(cycle1, cycle2, cycle3)
 
+# test with SeekHealthInfo (missings explicit)
 hints5_svy_with_diff %>% 
   mutate_at("SeekHealthInfo", factor, labels = c("NA", "Yes", "No")) %>% 
-  group_by(survey, Treatment_H5C3, SeekHealthInfo) %>% 
+  group_by(survey, treatment, SeekHealthInfo) %>% 
   summarize(n = unweighted(n()),
             pct = survey_mean(na.rm = TRUE)) %>% 
   mutate_at(vars(starts_with("pct")), percent)

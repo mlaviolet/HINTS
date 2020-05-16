@@ -105,6 +105,7 @@ proc surveyfreq data = HINTS5_no_diff varmethod = jackknife  missing;
 run;
 
 /* controlling for differences between groups */
+title "Controlling for Group Differences";
 proc format;
   value surveyx
     1 = "HINTS 5 Cycle 1"
@@ -146,8 +147,8 @@ data HINTS5_with_diff;
            Merged_NWgt[i] = hints51wgts[i];
            Merged_NWgt[50+i] = person_finwt0;
 	     end;
-	     do i = 1 to 150; 
-           Merged_NWgt[100+i] = person_finwt0;
+	     do i = 101 to 250; 
+           Merged_NWgt[i] = person_finwt0;
          end;
        end;
   else if survey eq 2 
@@ -157,8 +158,8 @@ data HINTS5_with_diff;
                 Merged_NWgt[i] = person_finwt0;
                 Merged_NWgt[50+i] = hints52wgts[i];
 		      end;
-              do i = 1 to 150;
-                Merged_NWgt[100+i] = person_finwt0;
+              do i = 101 to 250;
+                Merged_NWgt[i] = person_finwt0;
 		      end;
 		 end;
 	   else if survey eq 3
@@ -174,10 +175,6 @@ data HINTS5_with_diff;
 			     end;
 run;
 
-/* RESUME HERE
-Treatment_H5C3
-*/
-
 data HINTS5_with_diff;
   set HINTS5_with_diff;
   if survey = 3 and Treatment_H5C3 = 2
@@ -187,7 +184,6 @@ data HINTS5_with_diff;
   format survey surveyx.;
 run;
 
-title "Controlling for Group Differences";
 proc freq data = HINTS5_with_diff;
   table survey /nocum nopercent;
 run;
@@ -195,6 +191,6 @@ run;
 proc surveyfreq data = HINTS5_with_diff varmethod = jackknife  missing;
   weight Merged_NWGT0;
   repweights Merged_NWGT1-Merged_NWGT250 / df = 98 jkcoefs = 0.98;
-  tables survey * (SeekHealthInfo ChanceAskQuestions) / row;
+  tables survey * SeekHealthInfo / row;
 run;
 title;
