@@ -201,6 +201,8 @@ hints5_svy_with_diff <- bind_rows(cycle1, cycle2, cycle3) %>%
   select(survey, PersonID, num_range("Merged_NWGT", 0:250), everything()) %>% 
   # variable to distinguish survey iterations
   mutate_at("survey", factor, 1:3, paste("HINTS 5 Cycle", 1:3)) %>% 
+  mutate_at("Treatment_H5C3", factor, 1:3, 
+            c("Paper only", "Web option", "Web bonus")) %>% 
   as_survey_rep(weights = "Merged_NWGT0",
                 repweights = paste0("Merged_NWGT", 1:250), 
                 type = "JK1", scale = 49/50, mse = TRUE)
@@ -208,7 +210,7 @@ rm(cycle1, cycle2, cycle3)
 
 hints5_svy_with_diff %>% 
   mutate_at("SeekHealthInfo", factor, labels = c("NA", "Yes", "No")) %>% 
-  group_by(survey, SeekHealthInfo) %>% 
+  group_by(survey, Treatment_H5C3, SeekHealthInfo) %>% 
   summarize(n = unweighted(n()),
             pct = survey_mean(na.rm = TRUE)) %>% 
   mutate_at(vars(starts_with("pct")), percent)
