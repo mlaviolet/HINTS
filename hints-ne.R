@@ -89,5 +89,14 @@ hints_svy %>%
   group_by(CENSDIV) %>% 
   summarize(n = unweighted(n()))
 
+# exploring
 
+model01 <- svyglm(SeekHealthInfo ~ Treatment_H5C3, 
+                  subset(hints_svy, survey == "HINTS 5 Cycle 3"),
+                  family = "quasibinomial")  
+regTermTest(model01, "Treatment_H5C3")
+
+hints_svy %>% 
+  group_by(CENSDIV) %>% 
+  summarize(pct = survey_mean(SeekHealthInfo == "Yes", na.rm = TRUE))
 

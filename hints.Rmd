@@ -242,7 +242,7 @@ chisq_wald$parameter
 
 To assess for differences across modality groups, create a survey object `hints5_3_grp` that uses `nwgt0` as the sampling weight and `nwgt1` through `nwgt150` as replicate weights. Then fit a regression model using the variable of interest as the response and the group variable `Treatment_H5C3` as the covariate. Since the survey function `svychisq()` currently supports only two-way tables, use `regTermTest()` to test for group effect.
 
-## Assessing differences across groups, binary outcome
+## Assessing differences across groups
 
 #### Page 8
 
@@ -252,7 +252,7 @@ hints5_3_grp <- as_survey_rep(hints5_3, weights = "nwgt0",
                               type = "JK1", scale = 49/50, mse = TRUE) 
 ```
 
-### Assessing for differences across groups, binary outcome
+### Assessing differences across groups, binary outcome
 
 This model tests for differences across groups in the binary outcome `SeekCancerInfo`.
 
@@ -265,7 +265,7 @@ regTermTest(model01, "Treatment_H5C3")
 
 Note that "Paper only" is the referent because it's the first level of `Treatment_H5C3`. The results indicate no significant differences in `SeekCancerInfo` between the treatment groups.
 
-### Assessing for differences across groups, continuous outcome
+### Assessing differences across groups, continuous outcome
 
 This model tests for differences across groups in the outcome `GeneralHealth`, considered as continuous.
 
