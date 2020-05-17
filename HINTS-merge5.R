@@ -9,7 +9,7 @@
 
 library(dplyr)
 library(purrr)
-library(haven)  
+library(haven)
 library(srvyr)
 
 percent <- function(x, decimals = 4) round(100 * x, decimals)

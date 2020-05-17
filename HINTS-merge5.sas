@@ -28,7 +28,7 @@ proc format;
   value survey
     1 = "HINTS 5 Cycle 1"
     2 = "HINTS 5 Cycle 2"
-	3 = "HINTS 5 Cycle 3"
+    3 = "HINTS 5 Cycle 3"
     ;
 run;
 
@@ -69,19 +69,19 @@ data HINTS5_no_diff;
   else if survey eq 2 
        then 
          do i = 1 to 50; *HINTS 5 CYCLE 2;
-	       Merged_NWGT0 = person_finwt0;
+           Merged_NWGT0 = person_finwt0;
            Merged_NWgt[i] = person_finwt0;
            Merged_NWgt[50+i] = hints52wgts[i];
            Merged_NWgt[100+i] = person_finwt0;
-		 end;
-	   else if survey eq 3
+ end;
+   else if survey eq 3
             then 
               do i = 1 to 50; *HINTS 5 CYCLE 3;
-	            Merged_NWGT0 = TG_all_finwt0;
+                Merged_NWGT0 = TG_all_finwt0;
                 Merged_NWgt[i] = TG_all_finwt0;
                 Merged_NWgt[50+i] = TG_all_finwt0;
                 Merged_NWgt[100+i] = hints53wgts[i];
-			  end;
+  end;
 run;
 
 proc freq data = HINTS5_no_diff;
@@ -110,7 +110,7 @@ proc format;
   value surveyx
     1 = "HINTS 5 Cycle 1"
     2 = "HINTS 5 Cycle 2"
-	3 = "HINTS 5 Cycle 3, paper only"
+    3 = "HINTS 5 Cycle 3, paper only"
     4 = "HINTS 5 Cycle 3, Web option"
     5 = "HINTS 5 Cycle 3, Web bonus"
     ;
@@ -146,33 +146,33 @@ data HINTS5_with_diff;
            Merged_NWGT0 = person_finwt0;
            Merged_NWgt[i] = hints51wgts[i];
            Merged_NWgt[50+i] = person_finwt0;
-	     end;
-	     do i = 101 to 250; 
+     end;
+     do i = 101 to 250; 
            Merged_NWgt[i] = person_finwt0;
          end;
        end;
   else if survey eq 2 
        then do;
               do i = 1 to 50; *HINTS 5 CYCLE 2;
-	            Merged_NWGT0 = person_finwt0;
+                Merged_NWGT0 = person_finwt0;
                 Merged_NWgt[i] = person_finwt0;
                 Merged_NWgt[50+i] = hints52wgts[i];
-		      end;
+      end;
               do i = 101 to 250;
                 Merged_NWgt[i] = person_finwt0;
-		      end;
-		 end;
-	   else if survey eq 3
+      end;
+ end;
+   else if survey eq 3
             then do;
                    do i = 1 to 50; *HINTS 5 CYCLE 3;
-	                 Merged_NWGT0 = nwgt0;
+                     Merged_NWGT0 = nwgt0;
                      Merged_NWgt[i] = nwgt0;
                      Merged_NWgt[50+i] = nwgt0;
-			       end;
-			       do i = 1 to 150;
+                   end;
+                   do i = 1 to 150;
                      Merged_NWgt[100+i] = hints53wgts[i];
-			       end;
-			     end;
+                   end;
+                 end;
 run;
 
 data HINTS5_with_diff;
