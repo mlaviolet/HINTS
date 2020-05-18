@@ -12,6 +12,10 @@ knitr::opts_chunk$set(echo = TRUE)
 options(digits = 4)
 ```
 
+# Introduction
+
+This report presents results from merging data from HINTS 5, Cycles 1, 2, and 3. For Cycle 3 three survey modalities were used. NCI recommends that analysts assess whether the variables of interest differ across modality groups. If differences are not significant, Cycle 3 can be analyzed as a combined sample; otherwise the analyst should control for groups. Both scenarios are considered using as examples the variables `SeekHealthInfo` and `ChanceAskQuestions`. See the script `HINTS-merge5.R` for details of the merging. 
+
 ```{r load-pkgs, message=FALSE}
 library(dplyr)
 library(srvyr)
@@ -20,7 +24,9 @@ source("HINTS-merge5.R")
 percent <- function(x, decimals = 4) round(100 * x, decimals)
 ```
 
+All results agree with those obtained using SAS. 
 
+## `SeekHealthInfo` assuming no group differences
 
 ```{r}
 hints5_svy_no_diff %>% 
@@ -33,6 +39,8 @@ hints5_svy_no_diff %>%
 
 ```
 
+## `ChanceAskQuestions` assuming no group differences
+
 ```{r}
 hints5_svy_no_diff %>% 
   group_by(survey, ChanceAskQuestions) %>% 
@@ -44,6 +52,9 @@ hints5_svy_no_diff %>%
 
 ```
 
+## `SeekHealthInfo` controlling for group differences
+
+Note that Cycle 3 is now subgrouped by modality. Since Cycles 1 and 2 have no subgroups, those results are unchanged.
 
 ```{r}
 hints5_svy_with_diff %>% 
@@ -56,6 +67,7 @@ hints5_svy_with_diff %>%
 
 ```
 
+## `ChanceAskQuestions` controlling for group differences
 
 ```{r}
 hints5_svy_with_diff %>% 
@@ -67,3 +79,8 @@ hints5_svy_with_diff %>%
   kable_styling()
 
 ```
+
+# Conclusion
+
+Merging of multiple HINTS cycles is feasible with R and produces the same results as SAS.
+

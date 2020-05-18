@@ -374,16 +374,22 @@ summary {
 <h4 class="author">Michael Laviolette, PhD MPH</h4>
 <a class="author_email" href="mailto:#"><a href="mailto:statman54@gmail.com" class="email">statman54@gmail.com</a></a>
 </address>
-<h4 class="date">2020-05-18 10:40</h4>
+<h4 class="date">2020-05-18 16:07</h4>
 
 </div>
 
 
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>This report presents results from merging data from HINTS 5, Cycles 1, 2, and 3. For Cycle 3 three survey modalities were used. NCI recommends that analysts assess whether the variables of interest differ across modality groups. If differences are not significant, Cycle 3 can be analyzed as a combined sample; otherwise the analyst should control for groups. Both scenarios are considered using as examples the variables <code>SeekHealthInfo</code> and <code>ChanceAskQuestions</code>. See the script <code>HINTS-merge5.R</code> for details of the merging.</p>
 <pre class="r"><code>library(dplyr)
 library(srvyr)
 library(kableExtra)
 source(&quot;HINTS-merge5.R&quot;)
 percent &lt;- function(x, decimals = 4) round(100 * x, decimals)</code></pre>
+<p>All results agree with those obtained using SAS.</p>
+<div id="seekhealthinfo-assuming-no-group-differences" class="section level2">
+<h2><code>SeekHealthInfo</code> assuming no group differences</h2>
 <pre class="r"><code>hints5_svy_no_diff %&gt;% 
   group_by(survey, SeekHealthInfo) %&gt;% 
   summarize(n = unweighted(n()),
@@ -567,6 +573,9 @@ No
 </tr>
 </tbody>
 </table>
+</div>
+<div id="chanceaskquestions-assuming-no-group-differences" class="section level2">
+<h2><code>ChanceAskQuestions</code> assuming no group differences</h2>
 <pre class="r"><code>hints5_svy_no_diff %&gt;% 
   group_by(survey, ChanceAskQuestions) %&gt;% 
   summarize(n = unweighted(n()),
@@ -852,6 +861,10 @@ Never
 </tr>
 </tbody>
 </table>
+</div>
+<div id="seekhealthinfo-controlling-for-group-differences" class="section level2">
+<h2><code>SeekHealthInfo</code> controlling for group differences</h2>
+<p>Note that Cycle 3 is now subgrouped by modality. Since Cycles 1 and 2 have no subgroups, those results are unchanged.</p>
 <pre class="r"><code>hints5_svy_with_diff %&gt;% 
   group_by(survey, treatment, SeekHealthInfo) %&gt;% 
   summarize(n = unweighted(n()),
@@ -1185,6 +1198,9 @@ No
 </tr>
 </tbody>
 </table>
+</div>
+<div id="chanceaskquestions-controlling-for-group-differences" class="section level2">
+<h2><code>ChanceAskQuestions</code> controlling for group differences</h2>
 <pre class="r"><code>hints5_svy_with_diff %&gt;% 
   group_by(survey, treatment, ChanceAskQuestions) %&gt;% 
   summarize(n = unweighted(n()),
@@ -1718,6 +1734,12 @@ Never
 </tr>
 </tbody>
 </table>
+</div>
+</div>
+<div id="conclusion" class="section level1">
+<h1>Conclusion</h1>
+<p>Merging of multiple HINTS cycles is feasible with R and produces the same results as SAS.</p>
+</div>
 
 
 
