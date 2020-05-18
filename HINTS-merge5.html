@@ -374,11 +374,16 @@ summary {
 <h4 class="author">Michael Laviolette, PhD MPH</h4>
 <a class="author_email" href="mailto:#"><a href="mailto:statman54@gmail.com" class="email">statman54@gmail.com</a></a>
 </address>
-<h4 class="date">2020-05-17 19:29</h4>
+<h4 class="date">2020-05-17 21:47</h4>
 
 </div>
 
 
+<pre class="r"><code>library(dplyr)
+library(srvyr)
+library(kableExtra)
+source(&quot;HINTS-merge5.R&quot;)
+percent &lt;- function(x, decimals = 4) round(100 * x, decimals)</code></pre>
 <pre class="r"><code>hints5_svy_no_diff %&gt;% 
   group_by(survey, SeekHealthInfo) %&gt;% 
   summarize(n = unweighted(n()),

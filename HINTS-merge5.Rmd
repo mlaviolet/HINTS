@@ -12,15 +12,9 @@ knitr::opts_chunk$set(echo = TRUE)
 options(digits = 4)
 ```
 
-```{r load-pkgs, echo=FALSE, message=FALSE}
-library(broom)
+```{r load-pkgs, message=FALSE}
 library(dplyr)
-library(haven)
-library(purrr)
 library(srvyr)
-library(survey)
-library(tibble)
-library(tidyr)
 library(kableExtra)
 source("HINTS-merge5.R")
 percent <- function(x, decimals = 4) round(100 * x, decimals)
