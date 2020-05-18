@@ -4,6 +4,7 @@
    https://hints.cancer.gov/data/download-data.aspx
 */
 
+options missing = "X";
 DM OUTPUT 'clear' continue;
 DM LOG    'clear' continue;
 title;
@@ -112,6 +113,11 @@ data HINTS5_no_diff;
   if ChanceAskQuestions < 0 then ChanceAskQuestions = .;
 run;
 
+proc freq data = HINTS5_no_diff;
+  table SeekCancerInfo GeneralHealth SeekHealthInfo ChanceAskQuestions / 
+    nopercent nocum;
+run;
+
 title "Assuming No Group Differences";
 /* test on variables SeekHealthInfo ChanceAskQuestions 
    missings are explicit 
@@ -125,11 +131,7 @@ ODS TAGSETS.EXCELXP
     Pages_FitWidth = '1'
     Pages_FitHeight = '100'
     Default_Column_Width = '10');
-proc freq data = HINTS5_no_diff;
-  table SeekCancerInfo GeneralHealth SeekHealthInfo ChanceAskQuestions / 
-    nopercent nocum;
-run;
-proc surveyfreq data = HINTS5_no_diff varmethod = jackknife  missing;
+proc surveyfreq data = HINTS5_no_diff varmethod = jackknife missing;
   weight Merged_NWGT0;
   repweights Merged_NWGT1-Merged_NWGT150 / df = 98 jkcoefs = 0.98;
   tables survey * (SeekHealthInfo ChanceAskQuestions) / row;
@@ -197,6 +199,14 @@ data HINTS5_with_diff;
   else if survey = 3 and Treatment_H5C3 = 3
        then survey = 5;
   format survey surveyx.;
+  if SeekCancerInfo < 0 then SeekCancerInfo = .;
+  if GeneralHealth < 0 then GeneralHealth = .;
+  if SeekHealthInfo < 0 then SeekHealthInfo = .;
+  if ChanceAskQuestions < 0 then ChanceAskQuestions = .;
+run;
+
+proc freq data = HINTS5_with_diff;
+  table survey / nocum nopercent;
 run;
 
 /* test on variables SeekHealthInfo ChanceAskQuestions 
@@ -211,9 +221,6 @@ ODS TAGSETS.EXCELXP
     Pages_FitWidth = '1'
     Pages_FitHeight = '100'
     Default_Column_Width = '10');
-proc freq data = HINTS5_with_diff;
-  table survey / nocum nopercent;
-run;
 proc surveyfreq data = HINTS5_with_diff varmethod = jackknife missing;
   weight Merged_NWGT0;
   repweights Merged_NWGT1-Merged_NWGT250 / df = 98 jkcoefs = 0.98;
