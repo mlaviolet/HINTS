@@ -1,0 +1,75 @@
+---
+title: "HINTS 5 with R"
+author: 
+  - name          : "Michael Laviolette, PhD MPH" 
+    email         : "statman54@gmail.com"
+date: "`r format(Sys.time(), '%Y-%m-%d %H:%M')`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(digits = 4)
+```
+
+```{r load-pkgs, echo=FALSE, message=FALSE}
+library(broom)
+library(dplyr)
+library(haven)
+library(purrr)
+library(srvyr)
+library(survey)
+library(tibble)
+library(tidyr)
+library(kableExtra)
+source("HINTS-merge5.R")
+percent <- function(x, decimals = 4) round(100 * x, decimals)
+```
+
+
+
+```{r}
+hints5_svy_no_diff %>% 
+  group_by(survey, SeekHealthInfo) %>% 
+  summarize(n = unweighted(n()),
+            pct = survey_mean(na.rm = TRUE)) %>% 
+  mutate_at(vars(starts_with("pct")), percent) %>% 
+  kable() %>% 
+  kable_styling()
+
+```
+
+```{r}
+hints5_svy_no_diff %>% 
+  group_by(survey, ChanceAskQuestions) %>% 
+  summarize(n = unweighted(n()),
+            pct = survey_mean(na.rm = TRUE)) %>% 
+  mutate_at(vars(starts_with("pct")), percent) %>% 
+  kable() %>% 
+  kable_styling()
+
+```
+
+
+```{r}
+hints5_svy_with_diff %>% 
+  group_by(survey, treatment, SeekHealthInfo) %>% 
+  summarize(n = unweighted(n()),
+            pct = survey_mean(na.rm = TRUE)) %>% 
+  mutate_at(vars(starts_with("pct")), percent) %>% 
+  kable() %>% 
+  kable_styling()
+
+```
+
+
+```{r}
+hints5_svy_with_diff %>% 
+  group_by(survey, treatment, ChanceAskQuestions) %>% 
+  summarize(n = unweighted(n()),
+            pct = survey_mean(na.rm = TRUE)) %>% 
+  mutate_at(vars(starts_with("pct")), percent) %>% 
+  kable() %>% 
+  kable_styling()
+
+```

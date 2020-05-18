@@ -144,6 +144,10 @@ hints5_svy_no_diff <- bind_rows(cycle1, cycle2, cycle3_no_diff) %>%
   select(survey, PersonID, num_range("Merged_NWGT", 0:150), everything()) %>% 
   # variable to distinguish survey iterations
   mutate_at("survey", factor, 1:3, paste("HINTS 5 Cycle", 1:3)) %>% 
+  mutate_at("SeekHealthInfo", factor, labels = c("NA", "Yes", "No")) %>% 
+  mutate_at("ChanceAskQuestions", factor,
+            labels = c(paste0("NA", 1:5),
+                       "Always", "Usually", "Sometimes", "Never")) %>%
   as_survey_rep(weights = "Merged_NWGT0",
                 repweights = paste0("Merged_NWGT", 1:150), 
                 type = "JK1", scale = 49/50, mse = TRUE)
@@ -151,10 +155,16 @@ rm(cycle1, cycle2, cycle3_no_diff)
 
 # test on SeekHealthInfo (missings explicit)
 hints5_svy_no_diff %>% 
-  mutate_at("SeekHealthInfo", factor, labels = c("NA", "Yes", "No")) %>% 
   group_by(survey, SeekHealthInfo) %>% 
   summarize(n = unweighted(n()),
             pct = survey_mean(na.rm = TRUE)) %>% 
+  mutate_at(vars(starts_with("pct")), percent)
+
+# test with ChanceAskQuestions (missings explicit)
+hints5_svy_no_diff %>%
+  group_by(survey, ChanceAskQuestions) %>%
+  summarize(n = unweighted(n()),
+            pct = survey_mean(na.rm = TRUE)) %>%
   mutate_at(vars(starts_with("pct")), percent)
 
 # Merge three cycles controlling for group differences --------------------
@@ -217,6 +227,10 @@ hints5_svy_with_diff <- bind_rows(cycle1, cycle2, cycle3) %>%
     survey == 3 & Treatment_H5C3 == 3 ~ 3)) %>% 
   mutate_at("survey", factor, 1:3, paste("HINTS 5 Cycle", 1:3)) %>% 
   mutate_at("treatment", factor, 1:3, treatment_lbl) %>% 
+  mutate_at("SeekHealthInfo", factor, labels = c("NA", "Yes", "No")) %>% 
+  mutate_at("ChanceAskQuestions", factor,
+            labels = c(paste0("NA", 1:5),
+                       "Always", "Usually", "Sometimes", "Never")) %>%
   # reorder columns to put treatment and new weights in front
   select(survey, treatment, PersonID, num_range("Merged_NWGT", 0:250), 
          everything()) %>% 
@@ -228,11 +242,19 @@ rm(cycle1, cycle2, cycle3)
 
 # test with SeekHealthInfo (missings explicit)
 hints5_svy_with_diff %>% 
-  mutate_at("SeekHealthInfo", factor, labels = c("NA", "Yes", "No")) %>% 
   group_by(survey, treatment, SeekHealthInfo) %>% 
   summarize(n = unweighted(n()),
             pct = survey_mean(na.rm = TRUE)) %>% 
   mutate_at(vars(starts_with("pct")), percent)
+
+# test with ChanceAskQuestions (missings explicit)
+hints5_svy_with_diff %>%
+  group_by(survey, treatment, ChanceAskQuestions) %>%
+  summarize(n = unweighted(n()),
+            pct = survey_mean(na.rm = TRUE)) %>%
+  mutate_at(vars(starts_with("pct")), percent)
+
+
 
 # END ---------------------------------------------------------------------
 
