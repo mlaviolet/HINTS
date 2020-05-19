@@ -14,7 +14,7 @@ options(digits = 4)
 
 # Introduction
 
-This report presents results from merging data from HINTS 5, Cycles 1, 2, and 3. For Cycle 3 three survey modalities were used. NCI recommends that analysts assess whether the variables of interest differ across modality groups. If differences are not significant, Cycle 3 can be analyzed as a combined sample; otherwise the analyst should control for groups. Both scenarios are considered using as examples the variables `SeekHealthInfo` and `ChanceAskQuestions`. See the script `HINTS-merge5.R` for details of the merging. 
+This report presents results from merging data from HINTS 5, Cycles 1, 2, and 3. For Cycle 3 three survey modalities were used. NCI recommends that analysts assess whether the variables of interest differ across modality groups. If differences are not significant, Cycle 3 can be analyzed as a combined sample; otherwise the analyst should control for groups. Both scenarios are considered using as examples the variables `SeekHealthInfo` and `ChanceAskQuestions`. See the script `HINTS-merge5.R` for details of the merging. Results from SAS are in the Excel files 'no_differences.xlsx` and `with_differences.xlsx`.
 
 ```{r load-pkgs, message=FALSE}
 library(dplyr)
