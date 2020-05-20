@@ -159,6 +159,7 @@ chisq_test2$parameter
 Results match the table on page 16.
 
 #### Multivariable logistic regression of gender and education on `SeekCancerInfo`
+##### Page 17
 
 This example illustrates a multivariable logistic regression model using the `svyglm()` function from `survey`. The first argument is a modeling formula, the second is the survey object, and the third specifies a binary response. Store the fitted model in an object so that you can extract fitted values, residuals, and model metrics. For a logistic regression model use the argument `family = "quasibinomial"`. 
 
@@ -194,6 +195,7 @@ or %>%
 ```
 
 #### Multivariable linear regression of gender and education on `GeneralHealth`
+##### Pages 18-19
 
 Although `GeneralHealth` is actually a categorical variable I'll follow the document and treat it as continuous for purposes of discussion. Here's the linear regression model fitting `GeneralHealth` against `Treatment_H5C3`. In the following, omitting the `family` argument defaults to the normal regression model. This code reproduces the results on page 18.
 
@@ -253,6 +255,7 @@ hints5_3_grp <- as_survey_rep(hints5_3, weights = "nwgt0",
 ```
 
 ### Assessing differences across groups, binary outcome
+##### Page 8
 
 This model tests for differences across groups in the binary outcome `SeekCancerInfo`.
 
@@ -297,19 +300,34 @@ hints5_3_paper <- hints5_3 %>%
                 repweights = paste0("TG1_FINWT", 1:50,
                 type = "JK1", scale = 49/50, mse = TRUE)
 
-model00 <- 
+model03 <- 
   svyglm(SeekCancerInfo ~ Treatment_H5C3 + predictor1 + predictor2 + ...,
                  hints5_3_grp, family = "quasibinomial") 
 
 ```
 
-# RESUME HERE
+### If group differences are not found
+
+#### Option C: Use the combined sample without accounting for group differences
+
+For Cycle 3, if group differences are not found the appropriate weights are the sample weight `TG_all_FINWT0` and replicate weights `TG_all_FINWT1-TG_all_FINWT150`.
+
+```{r combined_sample, eval=FALSE}
+hints5_3_all <- hints5_3 %>% 
+  as_survey_rep(weights = "TG_all_FINWT0",
+                repweights = paste0("TG_all_FINWT", 1:50,
+                type = "JK1", scale = 49/50, mse = TRUE)
+ 
+model04 <- 
+  svyglm(SeekCancerInfo ~ predictor1 + predictor2 + ...,
+                 hints5_3_grp, family = "quasibinomial") 
+```
 
 ## Merging HINTS survey iterations
 
 ### Merging HINTS 5, Cycles 2 and 3 assuming no differences between groups
 
-```{r}
+```{r merge_23}
 # Cycle 2, 100 replicate weights
 # cycle2a, import Cycle 2 data
 # cycle2b, new replicate weights 1 - 50: copy PERSON_FINWT1 - PERSON_FINWT50 as
