@@ -1,5 +1,5 @@
 ---
-title: "HINTS 5 with R"
+title: "Merging HINTS 5 with R"
 author: 
   - name          : "Michael Laviolette, PhD MPH" 
     email         : "statman54@gmail.com"
@@ -28,7 +28,7 @@ All results agree with those obtained using SAS.
 
 ## `SeekHealthInfo` assuming no group differences
 
-```{r}
+```{r info-no-diff}
 hints5_svy_no_diff %>% 
   group_by(survey, SeekHealthInfo) %>% 
   summarize(n = unweighted(n()),
@@ -41,7 +41,7 @@ hints5_svy_no_diff %>%
 
 ## `ChanceAskQuestions` assuming no group differences
 
-```{r}
+```{r questions-no-diff}
 hints5_svy_no_diff %>% 
   group_by(survey, ChanceAskQuestions) %>% 
   summarize(n = unweighted(n()),
@@ -56,7 +56,7 @@ hints5_svy_no_diff %>%
 
 Note that Cycle 3 is now subgrouped by modality. Since Cycles 1 and 2 have no subgroups, those results are unchanged.
 
-```{r}
+```{r info-with-diff}
 hints5_svy_with_diff %>% 
   group_by(survey, treatment, SeekHealthInfo) %>% 
   summarize(n = unweighted(n()),
@@ -69,7 +69,7 @@ hints5_svy_with_diff %>%
 
 ## `ChanceAskQuestions` controlling for group differences
 
-```{r}
+```{r questions-with-diff}
 hints5_svy_with_diff %>% 
   group_by(survey, treatment, ChanceAskQuestions) %>% 
   summarize(n = unweighted(n()),
