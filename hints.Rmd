@@ -325,7 +325,7 @@ model04 <-
 
 ## Merging HINTS survey iterations
 
-### Merging HINTS 5, Cycles 2 and 3 assuming no differences between groups
+The following code (pp. 52-54) merges HINTS 5, Cycles 2 and 3 assuming no differences between groups. 
 
 ```{r merge_23}
 # Cycle 2, 100 replicate weights
@@ -340,9 +340,7 @@ cycle2a <-
                "HINTS 5- Cycle 2-SAS-03192020/hints5_cycle2_public.sas7bdat")) 
 cycle2b <- cycle2a %>% 
   select(PersonID, c(paste0("PERSON_FINWT", 0:50))) %>% 
-  mutate(Merged_NWGT0 = PERSON_FINWT0) %>% 
-  select(-PERSON_FINWT0) %>% 
-  rename_at(paste0("PERSON_FINWT", 1:50), ~ paste0("Merged_NWGT", 1:50))  
+  rename_at(paste0("PERSON_FINWT", 0:50), ~ paste0("Merged_NWGT", 0:50))  
 cycle2c <- map(1:50, ~ select(cycle2b, PersonID, Merged_NWGT0)) %>% 
   reduce(inner_join, by = "PersonID") %>% 
   set_names(c("PersonID", paste0("Merged_NWGT", 51:100)))
@@ -363,9 +361,7 @@ cycle3a <- read_sas(unz("HINTS5_Cycle3_SAS_03112020.zip",
                          "hints5_cycle3_public.sas7bdat"))
 cycle3b <- cycle3a %>% 
   select(PersonID, c(paste0("TG_all_FINWT", 0:50))) %>% 
-  mutate(Merged_NWGT0 = TG_all_FINWT0) %>% 
-  select(-TG_all_FINWT0) %>% 
-  rename_at(paste0("TG_all_FINWT", 1:50), ~ paste0("Merged_NWGT", 51:100))
+  rename_at(paste0("TG_all_FINWT", 0:50), ~ paste0("Merged_NWGT", c(0, 51:100)))
 cycle3c <- map(1:50, ~ select(cycle3b, PersonID, Merged_NWGT0)) %>% 
   reduce(inner_join, by = "PersonID") %>% 
   set_names(c("PersonID", paste0("Merged_NWGT", 1:50)))
@@ -396,7 +392,7 @@ rm(temp_hints5_cycle2, temp_hints5_cycle3)
 
 ```
 
-Replicate results obtained from SAS code
+The following code replicates the results obtained from the merged data using SAS.
 
 ```{r}
 mergeHINTSS5C2_HINTS5C3 %>% 
@@ -419,12 +415,11 @@ mergeHINTSS5C2_HINTS5C3 %>%
   mutate_at(vars(starts_with("pct")), percent)
 ```
 
-### Merging HINTS 5, Cycles 2 and 3 controlling for differences between groups
-
-"An analyst might find that there are group differences on the variables of interest in HINTS 5 Cycle 3. In this case, the analyst would need to create a new variable in both data files that would allow the analyst to differentiate between the 4 groups (HINTS 5 Cycle 2, HINTS 5 Cycle 3 [H5C3] Paper Only, H5C3 Web Option, and H5C3 Web Bonus groups). Next, the analyst will need to use the Rizzo, et al., (2008) method to create 200 replicate weights."
+See the script `HINTS-merge5.R` for details of merging HINTS 5, Cycles 1, 2, and 3
 
 ## Conclusion
 
+The R language, with the packages `survey` and `srvyr`, provides an effective means for analyzing HINTS data without the need for expensive proprietary software.
 
 
 

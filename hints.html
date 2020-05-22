@@ -374,7 +374,7 @@ summary {
 <h4 class="author">Michael Laviolette, PhD MPH</h4>
 <a class="author_email" href="mailto:#"><a href="mailto:statman54@gmail.com" class="email">statman54@gmail.com</a></a>
 </address>
-<h4 class="date">2020-05-20 16:19</h4>
+<h4 class="date">2020-05-22 13:30</h4>
 
 </div>
 
@@ -1378,8 +1378,7 @@ model04 &lt;-
 </div>
 <div id="merging-hints-survey-iterations" class="section level2">
 <h2>Merging HINTS survey iterations</h2>
-<div id="merging-hints-5-cycles-2-and-3-assuming-no-differences-between-groups" class="section level3">
-<h3>Merging HINTS 5, Cycles 2 and 3 assuming no differences between groups</h3>
+<p>The following code (pp. 52-54) merges HINTS 5, Cycles 2 and 3 assuming no differences between groups.</p>
 <pre class="r"><code># Cycle 2, 100 replicate weights
 # cycle2a, import Cycle 2 data
 # cycle2b, new replicate weights 1 - 50: copy PERSON_FINWT1 - PERSON_FINWT50 as
@@ -1392,9 +1391,7 @@ cycle2a &lt;-
                &quot;HINTS 5- Cycle 2-SAS-03192020/hints5_cycle2_public.sas7bdat&quot;)) 
 cycle2b &lt;- cycle2a %&gt;% 
   select(PersonID, c(paste0(&quot;PERSON_FINWT&quot;, 0:50))) %&gt;% 
-  mutate(Merged_NWGT0 = PERSON_FINWT0) %&gt;% 
-  select(-PERSON_FINWT0) %&gt;% 
-  rename_at(paste0(&quot;PERSON_FINWT&quot;, 1:50), ~ paste0(&quot;Merged_NWGT&quot;, 1:50))  
+  rename_at(paste0(&quot;PERSON_FINWT&quot;, 0:50), ~ paste0(&quot;Merged_NWGT&quot;, 0:50))  
 cycle2c &lt;- map(1:50, ~ select(cycle2b, PersonID, Merged_NWGT0)) %&gt;% 
   reduce(inner_join, by = &quot;PersonID&quot;) %&gt;% 
   set_names(c(&quot;PersonID&quot;, paste0(&quot;Merged_NWGT&quot;, 51:100)))
@@ -1415,9 +1412,7 @@ cycle3a &lt;- read_sas(unz(&quot;HINTS5_Cycle3_SAS_03112020.zip&quot;,
                          &quot;hints5_cycle3_public.sas7bdat&quot;))
 cycle3b &lt;- cycle3a %&gt;% 
   select(PersonID, c(paste0(&quot;TG_all_FINWT&quot;, 0:50))) %&gt;% 
-  mutate(Merged_NWGT0 = TG_all_FINWT0) %&gt;% 
-  select(-TG_all_FINWT0) %&gt;% 
-  rename_at(paste0(&quot;TG_all_FINWT&quot;, 1:50), ~ paste0(&quot;Merged_NWGT&quot;, 51:100))
+  rename_at(paste0(&quot;TG_all_FINWT&quot;, 0:50), ~ paste0(&quot;Merged_NWGT&quot;, c(0, 51:100)))
 cycle3c &lt;- map(1:50, ~ select(cycle3b, PersonID, Merged_NWGT0)) %&gt;% 
   reduce(inner_join, by = &quot;PersonID&quot;) %&gt;% 
   set_names(c(&quot;PersonID&quot;, paste0(&quot;Merged_NWGT&quot;, 1:50)))
@@ -1478,7 +1473,6 @@ rm(temp_hints5_cycle2, temp_hints5_cycle3)</code></pre>
 ## 7 Usually             1933 22.0    0.798 
 ## 8 Sometimes            488  5.41   0.445 
 ## 9 Never                 79  0.787  0.126</code></pre>
-</div>
 <div id="merging-hints-5-cycles-2-and-3-controlling-for-differences-between-groups" class="section level3">
 <h3>Merging HINTS 5, Cycles 2 and 3 controlling for differences between groups</h3>
 <p>“An analyst might find that there are group differences on the variables of interest in HINTS 5 Cycle 3. In this case, the analyst would need to create a new variable in both data files that would allow the analyst to differentiate between the 4 groups (HINTS 5 Cycle 2, HINTS 5 Cycle 3 [H5C3] Paper Only, H5C3 Web Option, and H5C3 Web Bonus groups). Next, the analyst will need to use the Rizzo, et al., (2008) method to create 200 replicate weights.”</p>
