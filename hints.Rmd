@@ -181,17 +181,13 @@ To obtain odds ratios with confidence intervals, we exponentiate the model coeff
 
 ```{r odds_ratios}
 # odds ratios
-or_ci <- exp(confint(model03, ddf = 49)) %>% 
-  as_tibble(rownames = "name")
-or <- exp(coef(model03)) %>% 
-  enframe() %>% 
-  inner_join(or_ci, by = "name") %>% 
-  filter(name != "(Intercept)") %>% 
-  setNames(c("Effect", "Odds ratio", "OR lower 95%", "OR upper 95%"))
-or %>% 
+tidy(model03, conf.int = TRUE, exponentiate = TRUE, ddf = 49) %>% 
   kable() %>% 
   kable_styling()
-
+# NOTE: At the time of writing, the function tidy() in version 0.5.6 of the 
+#   {broom) package did not support adjusting degrees of freedom. The issue has 
+#   been fixed and the above code will give correct results with the subsequent 
+#   release. 
 ```
 
 #### Multivariable linear regression of gender and education on `GeneralHealth`
@@ -245,10 +241,9 @@ chisq_wald$parameter
 To assess for differences across modality groups, create a survey object `hints5_3_grp` that uses `nwgt0` as the sampling weight and `nwgt1` through `nwgt150` as replicate weights. Then fit a regression model using the variable of interest as the response and the group variable `Treatment_H5C3` as the covariate. Since the survey function `svychisq()` currently supports only two-way tables, use `regTermTest()` to test for group effect.
 
 ## Assessing differences across groups
-
 #### Page 8
 
-```{r}
+```{r group_diff}
 hints5_3_grp <- as_survey_rep(hints5_3, weights = "nwgt0", 
                               repweights = paste0("nwgt", 1:150), 
                               type = "JK1", scale = 49/50, mse = TRUE) 
@@ -259,7 +254,7 @@ hints5_3_grp <- as_survey_rep(hints5_3, weights = "nwgt0",
 
 This model tests for differences across groups in the binary outcome `SeekCancerInfo`.
 
-```{r}
+```{r group_diff_binary}
 model01 <- svyglm(SeekCancerInfo ~ Treatment_H5C3, hints5_3_grp, 
                   family = "quasibinomial") 
 summary(model01)
@@ -272,7 +267,7 @@ Note that "Paper only" is the referent because it's the first level of `Treatmen
 
 This model tests for differences across groups in the outcome `GeneralHealth`, considered as continuous.
 
-```{r}
+```{r group_diff_cont}
 model02 <- svyglm(GeneralHealth ~ Treatment_H5C3, hints5_3_grp)
 summary(model02)
 regTermTest(model02, "Treatment_H5C3")
@@ -394,7 +389,7 @@ rm(temp_hints5_cycle2, temp_hints5_cycle3)
 
 The following code replicates the results obtained from the merged data using SAS.
 
-```{r}
+```{r merge_seek_info}
 mergeHINTSS5C2_HINTS5C3 %>% 
   mutate_at("SeekHealthInfo", factor, labels = c("NA", "Yes", "No")) %>% 
   group_by(SeekHealthInfo) %>% 
@@ -404,7 +399,7 @@ mergeHINTSS5C2_HINTS5C3 %>%
 ```
 
 
-```{r}
+```{r merge_ask_ques}
 mergeHINTSS5C2_HINTS5C3 %>%
   mutate_at("ChanceAskQuestions", factor,
             labels = c(paste0("NA", 1:5),
