@@ -374,22 +374,24 @@ summary {
 <h4 class="author">Michael Laviolette, PhD MPH</h4>
 <a class="author_email" href="mailto:#"><a href="mailto:statman54@gmail.com" class="email">statman54@gmail.com</a></a>
 </address>
-<h4 class="date">2020-05-20 09:26</h4>
+<h4 class="date">2020-06-09 15:50</h4>
 
 </div>
 
 
 <div id="introduction" class="section level1">
 <h1>Introduction</h1>
-<p>This report presents results from merging data from HINTS 5, Cycles 1, 2, and 3. For Cycle 3 three survey modalities were used. NCI recommends that analysts assess whether the variables of interest differ across modality groups. If differences are not significant, Cycle 3 can be analyzed as a combined sample; otherwise the analyst should control for groups. Both scenarios are considered using as examples the variables <code>SeekHealthInfo</code> and <code>ChanceAskQuestions</code>. See the script <code>HINTS-merge5.R</code> for details of the merging. Results from SAS are in the Excel files ’no_differences.xlsx<code>and</code>with_differences.xlsx`.</p>
+<p>This report presents results from merging data from HINTS 5, Cycles 1, 2, and 3. For Cycle 3 three survey modalities were used. NCI recommends that analysts assess whether the variables of interest differ across modality groups. If differences are not significant, Cycle 3 can be analyzed as a combined sample; otherwise, the analyst should control for groups. Both scenarios are considered using as examples the variables <code>SeekHealthInfo</code> and <code>ChanceAskQuestions</code>. See the script <a href="https://github.com/mlaviolet/HINTS/blob/master/HINTS-merge5.R">HINTS-merge5.R</a> for details of the merging. Results from SAS are in the Excel files <a href="https://github.com/mlaviolet/HINTS/blob/master/no_differences.xlsx">no_differences.xlsx</a> and <a href="https://github.com/mlaviolet/HINTS/blob/master/with_differences.xlsx">with_differences.xlsx</a>. Results from R and SAS agree.</p>
 <pre class="r"><code>library(dplyr)
 library(srvyr)
 library(kableExtra)
 source(&quot;HINTS-merge5.R&quot;)
 percent &lt;- function(x, decimals = 4) round(100 * x, decimals)</code></pre>
-<p>All results agree with those obtained using SAS.</p>
-<div id="seekhealthinfo-assuming-no-group-differences" class="section level2">
-<h2><code>SeekHealthInfo</code> assuming no group differences</h2>
+</div>
+<div id="seekhealthinfo" class="section level1">
+<h1><code>SeekHealthInfo</code></h1>
+<div id="assuming-no-group-differences" class="section level2">
+<h2>Assuming no group differences</h2>
 <pre class="r"><code>hints5_svy_no_diff %&gt;% 
   group_by(survey, SeekHealthInfo) %&gt;% 
   summarize(n = unweighted(n()),
@@ -574,296 +576,8 @@ No
 </tbody>
 </table>
 </div>
-<div id="chanceaskquestions-assuming-no-group-differences" class="section level2">
-<h2><code>ChanceAskQuestions</code> assuming no group differences</h2>
-<pre class="r"><code>hints5_svy_no_diff %&gt;% 
-  group_by(survey, ChanceAskQuestions) %&gt;% 
-  summarize(n = unweighted(n()),
-            pct = survey_mean(na.rm = TRUE)) %&gt;% 
-  mutate_at(vars(starts_with(&quot;pct&quot;)), percent) %&gt;% 
-  kable() %&gt;% 
-  kable_styling()</code></pre>
-<table class="table" style="margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:left;">
-survey
-</th>
-<th style="text-align:left;">
-ChanceAskQuestions
-</th>
-<th style="text-align:right;">
-n
-</th>
-<th style="text-align:right;">
-pct
-</th>
-<th style="text-align:right;">
-pct_se
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-HINTS 5 Cycle 1
-</td>
-<td style="text-align:left;">
-(Missing)
-</td>
-<td style="text-align:right;">
-514
-</td>
-<td style="text-align:right;">
-18.3609
-</td>
-<td style="text-align:right;">
-1.1563
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-HINTS 5 Cycle 1
-</td>
-<td style="text-align:left;">
-Always
-</td>
-<td style="text-align:right;">
-1765
-</td>
-<td style="text-align:right;">
-50.1409
-</td>
-<td style="text-align:right;">
-1.6425
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-HINTS 5 Cycle 1
-</td>
-<td style="text-align:left;">
-Usually
-</td>
-<td style="text-align:right;">
-725
-</td>
-<td style="text-align:right;">
-22.3212
-</td>
-<td style="text-align:right;">
-1.1863
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-HINTS 5 Cycle 1
-</td>
-<td style="text-align:left;">
-Sometimes
-</td>
-<td style="text-align:right;">
-245
-</td>
-<td style="text-align:right;">
-8.3552
-</td>
-<td style="text-align:right;">
-0.9000
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-HINTS 5 Cycle 1
-</td>
-<td style="text-align:left;">
-Never
-</td>
-<td style="text-align:right;">
-36
-</td>
-<td style="text-align:right;">
-0.8217
-</td>
-<td style="text-align:right;">
-0.2072
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-HINTS 5 Cycle 2
-</td>
-<td style="text-align:left;">
-(Missing)
-</td>
-<td style="text-align:right;">
-559
-</td>
-<td style="text-align:right;">
-20.0638
-</td>
-<td style="text-align:right;">
-1.2838
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-HINTS 5 Cycle 2
-</td>
-<td style="text-align:left;">
-Always
-</td>
-<td style="text-align:right;">
-1874
-</td>
-<td style="text-align:right;">
-50.2146
-</td>
-<td style="text-align:right;">
-1.2792
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-HINTS 5 Cycle 2
-</td>
-<td style="text-align:left;">
-Usually
-</td>
-<td style="text-align:right;">
-807
-</td>
-<td style="text-align:right;">
-23.3901
-</td>
-<td style="text-align:right;">
-1.1819
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-HINTS 5 Cycle 2
-</td>
-<td style="text-align:left;">
-Sometimes
-</td>
-<td style="text-align:right;">
-228
-</td>
-<td style="text-align:right;">
-5.3878
-</td>
-<td style="text-align:right;">
-0.6238
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-HINTS 5 Cycle 2
-</td>
-<td style="text-align:left;">
-Never
-</td>
-<td style="text-align:right;">
-36
-</td>
-<td style="text-align:right;">
-0.9437
-</td>
-<td style="text-align:right;">
-0.2210
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-HINTS 5 Cycle 3
-</td>
-<td style="text-align:left;">
-(Missing)
-</td>
-<td style="text-align:right;">
-1398
-</td>
-<td style="text-align:right;">
-28.0201
-</td>
-<td style="text-align:right;">
-1.1360
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-HINTS 5 Cycle 3
-</td>
-<td style="text-align:left;">
-Always
-</td>
-<td style="text-align:right;">
-2611
-</td>
-<td style="text-align:right;">
-45.2112
-</td>
-<td style="text-align:right;">
-1.2279
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-HINTS 5 Cycle 3
-</td>
-<td style="text-align:left;">
-Usually
-</td>
-<td style="text-align:right;">
-1126
-</td>
-<td style="text-align:right;">
-20.7079
-</td>
-<td style="text-align:right;">
-1.0738
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-HINTS 5 Cycle 3
-</td>
-<td style="text-align:left;">
-Sometimes
-</td>
-<td style="text-align:right;">
-260
-</td>
-<td style="text-align:right;">
-5.4281
-</td>
-<td style="text-align:right;">
-0.6339
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-HINTS 5 Cycle 3
-</td>
-<td style="text-align:left;">
-Never
-</td>
-<td style="text-align:right;">
-43
-</td>
-<td style="text-align:right;">
-0.6326
-</td>
-<td style="text-align:right;">
-0.1218
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-<div id="seekhealthinfo-controlling-for-group-differences" class="section level2">
-<h2><code>SeekHealthInfo</code> controlling for group differences</h2>
+<div id="controlling-for-group-differences" class="section level2">
+<h2>Controlling for group differences</h2>
 <p>Note that Cycle 3 is now subgrouped by modality. Since Cycles 1 and 2 have no subgroups, those results are unchanged.</p>
 <pre class="r"><code>hints5_svy_with_diff %&gt;% 
   group_by(survey, treatment, SeekHealthInfo) %&gt;% 
@@ -1199,8 +913,299 @@ No
 </tbody>
 </table>
 </div>
-<div id="chanceaskquestions-controlling-for-group-differences" class="section level2">
-<h2><code>ChanceAskQuestions</code> controlling for group differences</h2>
+</div>
+<div id="chanceaskquestions" class="section level1">
+<h1><code>ChanceAskQuestions</code></h1>
+<div id="assuming-no-group-differences-1" class="section level2">
+<h2>Assuming no group differences</h2>
+<pre class="r"><code>hints5_svy_no_diff %&gt;% 
+  group_by(survey, ChanceAskQuestions) %&gt;% 
+  summarize(n = unweighted(n()),
+            pct = survey_mean(na.rm = TRUE)) %&gt;% 
+  mutate_at(vars(starts_with(&quot;pct&quot;)), percent) %&gt;% 
+  kable() %&gt;% 
+  kable_styling()</code></pre>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+survey
+</th>
+<th style="text-align:left;">
+ChanceAskQuestions
+</th>
+<th style="text-align:right;">
+n
+</th>
+<th style="text-align:right;">
+pct
+</th>
+<th style="text-align:right;">
+pct_se
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+HINTS 5 Cycle 1
+</td>
+<td style="text-align:left;">
+(Missing)
+</td>
+<td style="text-align:right;">
+514
+</td>
+<td style="text-align:right;">
+18.3609
+</td>
+<td style="text-align:right;">
+1.1563
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+HINTS 5 Cycle 1
+</td>
+<td style="text-align:left;">
+Always
+</td>
+<td style="text-align:right;">
+1765
+</td>
+<td style="text-align:right;">
+50.1409
+</td>
+<td style="text-align:right;">
+1.6425
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+HINTS 5 Cycle 1
+</td>
+<td style="text-align:left;">
+Usually
+</td>
+<td style="text-align:right;">
+725
+</td>
+<td style="text-align:right;">
+22.3212
+</td>
+<td style="text-align:right;">
+1.1863
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+HINTS 5 Cycle 1
+</td>
+<td style="text-align:left;">
+Sometimes
+</td>
+<td style="text-align:right;">
+245
+</td>
+<td style="text-align:right;">
+8.3552
+</td>
+<td style="text-align:right;">
+0.9000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+HINTS 5 Cycle 1
+</td>
+<td style="text-align:left;">
+Never
+</td>
+<td style="text-align:right;">
+36
+</td>
+<td style="text-align:right;">
+0.8217
+</td>
+<td style="text-align:right;">
+0.2072
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+HINTS 5 Cycle 2
+</td>
+<td style="text-align:left;">
+(Missing)
+</td>
+<td style="text-align:right;">
+559
+</td>
+<td style="text-align:right;">
+20.0638
+</td>
+<td style="text-align:right;">
+1.2838
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+HINTS 5 Cycle 2
+</td>
+<td style="text-align:left;">
+Always
+</td>
+<td style="text-align:right;">
+1874
+</td>
+<td style="text-align:right;">
+50.2146
+</td>
+<td style="text-align:right;">
+1.2792
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+HINTS 5 Cycle 2
+</td>
+<td style="text-align:left;">
+Usually
+</td>
+<td style="text-align:right;">
+807
+</td>
+<td style="text-align:right;">
+23.3901
+</td>
+<td style="text-align:right;">
+1.1819
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+HINTS 5 Cycle 2
+</td>
+<td style="text-align:left;">
+Sometimes
+</td>
+<td style="text-align:right;">
+228
+</td>
+<td style="text-align:right;">
+5.3878
+</td>
+<td style="text-align:right;">
+0.6238
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+HINTS 5 Cycle 2
+</td>
+<td style="text-align:left;">
+Never
+</td>
+<td style="text-align:right;">
+36
+</td>
+<td style="text-align:right;">
+0.9437
+</td>
+<td style="text-align:right;">
+0.2210
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+HINTS 5 Cycle 3
+</td>
+<td style="text-align:left;">
+(Missing)
+</td>
+<td style="text-align:right;">
+1398
+</td>
+<td style="text-align:right;">
+28.0201
+</td>
+<td style="text-align:right;">
+1.1360
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+HINTS 5 Cycle 3
+</td>
+<td style="text-align:left;">
+Always
+</td>
+<td style="text-align:right;">
+2611
+</td>
+<td style="text-align:right;">
+45.2112
+</td>
+<td style="text-align:right;">
+1.2279
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+HINTS 5 Cycle 3
+</td>
+<td style="text-align:left;">
+Usually
+</td>
+<td style="text-align:right;">
+1126
+</td>
+<td style="text-align:right;">
+20.7079
+</td>
+<td style="text-align:right;">
+1.0738
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+HINTS 5 Cycle 3
+</td>
+<td style="text-align:left;">
+Sometimes
+</td>
+<td style="text-align:right;">
+260
+</td>
+<td style="text-align:right;">
+5.4281
+</td>
+<td style="text-align:right;">
+0.6339
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+HINTS 5 Cycle 3
+</td>
+<td style="text-align:left;">
+Never
+</td>
+<td style="text-align:right;">
+43
+</td>
+<td style="text-align:right;">
+0.6326
+</td>
+<td style="text-align:right;">
+0.1218
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="controlling-for-group-differences-1" class="section level2">
+<h2>Controlling for group differences</h2>
 <pre class="r"><code>hints5_svy_with_diff %&gt;% 
   group_by(survey, treatment, ChanceAskQuestions) %&gt;% 
   summarize(n = unweighted(n()),

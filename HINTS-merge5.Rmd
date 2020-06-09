@@ -1,20 +1,23 @@
 ---
 title: "Merging HINTS 5 with R"
-author: 
-  - name          : "Michael Laviolette, PhD MPH" 
-    email         : "statman54@gmail.com"
+author:
+- name: Michael Laviolette, PhD MPH
+  email: statman54@gmail.com
 date: "`r format(Sys.time(), '%Y-%m-%d %H:%M')`"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
 options(digits = 4)
 ```
 
 # Introduction
 
-This report presents results from merging data from HINTS 5, Cycles 1, 2, and 3. For Cycle 3 three survey modalities were used. NCI recommends that analysts assess whether the variables of interest differ across modality groups. If differences are not significant, Cycle 3 can be analyzed as a combined sample; otherwise the analyst should control for groups. Both scenarios are considered using as examples the variables `SeekHealthInfo` and `ChanceAskQuestions`. See the script `HINTS-merge5.R` for details of the merging. Results from SAS are in the Excel files 'no_differences.xlsx` and `with_differences.xlsx`.
+This report presents results from merging data from HINTS 5, Cycles 1, 2, and 3. For Cycle 3 three survey modalities were used. NCI recommends that analysts assess whether the variables of interest differ across modality groups. If differences are not significant, Cycle 3 can be analyzed as a combined sample; otherwise, the analyst should control for groups. Both scenarios are considered using as examples the variables `SeekHealthInfo` and `ChanceAskQuestions`. See the script 
+[HINTS-merge5.R](https://github.com/mlaviolet/HINTS/blob/master/HINTS-merge5.R) for details of the merging. Results from SAS are in the Excel files [no_differences.xlsx](https://github.com/mlaviolet/HINTS/blob/master/no_differences.xlsx) and [with_differences.xlsx](https://github.com/mlaviolet/HINTS/blob/master/with_differences.xlsx). Results from R and SAS agree. 
 
 ```{r load-pkgs, message=FALSE}
 library(dplyr)
@@ -24,9 +27,8 @@ source("HINTS-merge5.R")
 percent <- function(x, decimals = 4) round(100 * x, decimals)
 ```
 
-All results agree with those obtained using SAS. 
-
-## `SeekHealthInfo` assuming no group differences
+# `SeekHealthInfo` 
+## Assuming no group differences
 
 ```{r info-no-diff}
 hints5_svy_no_diff %>% 
@@ -39,20 +41,7 @@ hints5_svy_no_diff %>%
 
 ```
 
-## `ChanceAskQuestions` assuming no group differences
-
-```{r questions-no-diff}
-hints5_svy_no_diff %>% 
-  group_by(survey, ChanceAskQuestions) %>% 
-  summarize(n = unweighted(n()),
-            pct = survey_mean(na.rm = TRUE)) %>% 
-  mutate_at(vars(starts_with("pct")), percent) %>% 
-  kable() %>% 
-  kable_styling()
-
-```
-
-## `SeekHealthInfo` controlling for group differences
+## Controlling for group differences
 
 Note that Cycle 3 is now subgrouped by modality. Since Cycles 1 and 2 have no subgroups, those results are unchanged.
 
@@ -67,7 +56,21 @@ hints5_svy_with_diff %>%
 
 ```
 
-## `ChanceAskQuestions` controlling for group differences
+# `ChanceAskQuestions` 
+## Assuming no group differences
+
+```{r questions-no-diff}
+hints5_svy_no_diff %>% 
+  group_by(survey, ChanceAskQuestions) %>% 
+  summarize(n = unweighted(n()),
+            pct = survey_mean(na.rm = TRUE)) %>% 
+  mutate_at(vars(starts_with("pct")), percent) %>% 
+  kable() %>% 
+  kable_styling()
+
+```
+
+## Controlling for group differences
 
 ```{r questions-with-diff}
 hints5_svy_with_diff %>% 
