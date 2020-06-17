@@ -374,7 +374,7 @@ summary {
 <h4 class="author">Michael Laviolette, PhD MPH</h4>
 <a class="author_email" href="mailto:#"><a href="mailto:statman54@gmail.com" class="email">statman54@gmail.com</a></a>
 </address>
-<h4 class="date">2020-05-26 09:16</h4>
+<h4 class="date">2020-06-17 15:20</h4>
 
 </div>
 
@@ -796,7 +796,7 @@ model03$df.resid</code></pre>
 ##  in svyglm(formula = SeekCancerInfo ~ gender + edu, hints5_3_rep, 
 ##     family = &quot;quasibinomial&quot;)
 ## F =  27.27  on  3  and  49  df: p= 1.6e-10</code></pre>
-<p>To obtain odds ratios with confidence intervals, we exponentiate the model coefficients and interval endpoints. The following code collects these results into a table. Note the <code>ddf = 49</code> argument to the <code>confint</code> function. Results match the “Odds Ratio Estimates” table on page 18.</p>
+<p>To obtain odds ratios with confidence intervals, exponentiate the model coefficients and interval endpoints. Note the <code>ddf = 49</code> argument to the <code>tidy</code> function. Results match the “Odds Ratio Estimates” table on page 18. Note that you must have version 0.7.0 or later of the <code>broom</code> package to get correct results.</p>
 <pre class="r"><code># odds ratios
 tidy(model03, conf.int = TRUE, exponentiate = TRUE, ddf = 49) %&gt;% 
   kable() %&gt;% 
@@ -945,10 +945,7 @@ eduCollege graduate or higher
 </tr>
 </tbody>
 </table>
-<pre class="r"><code># NOTE: At the time of writing, the function tidy() in version 0.5.6 of the 
-#   {broom) package did not support adjusting degrees of freedom. The issue has 
-#   been fixed and the above code will give correct results with the subsequent 
-#   release. </code></pre>
+<pre class="r"><code># NOTE: You must have broom &gt;= 0.7.0 to get correct results</code></pre>
 </div>
 </div>
 <div id="multivariable-linear-regression-of-gender-and-education-on-generalhealth" class="section level4">

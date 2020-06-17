@@ -177,17 +177,15 @@ regTermTest(model03, "edu", df = 49)
 
 ```
 
-To obtain odds ratios with confidence intervals, we exponentiate the model coefficients and interval endpoints. The following code collects these results into a table. Note the `ddf = 49` argument to the `confint` function. Results match the "Odds Ratio Estimates" table on page 18.
+To obtain odds ratios with confidence intervals, exponentiate the model coefficients and interval endpoints. Note the `ddf = 49` argument to the `tidy` function. Results match the "Odds Ratio Estimates" table on page 18. Note that you must have version 0.7.0 or later of the `broom` package to get correct results.
+
 
 ```{r odds_ratios}
 # odds ratios
 tidy(model03, conf.int = TRUE, exponentiate = TRUE, ddf = 49) %>% 
   kable() %>% 
   kable_styling()
-# NOTE: At the time of writing, the function tidy() in version 0.5.6 of the 
-#   {broom) package did not support adjusting degrees of freedom. The issue has 
-#   been fixed and the above code will give correct results with the subsequent 
-#   release. 
+# NOTE: You must have broom >= 0.7.0 to get correct results
 ```
 
 #### Multivariable linear regression of gender and education on `GeneralHealth`
