@@ -19,7 +19,6 @@ library(haven)
 library(purrr)
 library(srvyr)
 library(survey)
-library(tibble)
 library(tidyr)
 library(kableExtra)
 ```
@@ -99,12 +98,12 @@ hints5_3 <- read_sas(unz("HINTS5_Cycle3_SAS_03112020.zip",
                          Education %in% 6:7 ~ 4,
                          TRUE ~ NA_real_)) %>% 
   # change edu and Treatment_H5C3 from numeric to factor
-  mutate_at("edu", factor, 1:4, edu_lbl) %>% 
-  mutate_at("Treatment_H5C3", factor, 1:3, group_lbl) %>% 
-  # "No" must be the referent level of SeekCancerInfo to model probability of
-  # "Yes". By default the first level of a factor is the referent level, so we
-  # reverse the order from the data.
-  mutate_at("SeekCancerInfo", factor, 2:1, c("No", "Yes"))
+  mutate(edu = factor(edu, 1:4, edu_lbl),
+         Treatment_H5C3 = factor(Treatment_H5C3, 1:3, group_lbl),
+         # "No" must be the referent level of SeekCancerInfo to model
+         # probability of "Yes". By default the first level of a factor is 
+         # the referent level, so I'll reverse the order from the data.
+         SeekCancerInfo = factor(SeekCancerInfo, 2:1, c("No", "Yes")))
 ```
 
 To analyze complex survey data in R we create a survey object that contains information about the sampling design and the survey data. For a replicate-weight design, we need to specify
@@ -147,13 +146,13 @@ tbl_1 %>%
 To perform the chi-square test we use `svychisq()` from `survey`. Wald and adjusted Wald tests are available.
 
 ```{r chi_sq_rep}
-chisq_test <- svychisq(~ edu + gender, hints5_3_rep, statistic = "Wald")
-chisq_test$statistic
-chisq_test$parameter
+svychisq(~ edu + gender, hints5_3_rep, statistic = "Wald") %>% 
+  tidy()
 
-chisq_test2 <- svychisq(~ edu + gender, hints5_3_rep, statistic = "adjWald")
-chisq_test2$statistic
-chisq_test2$parameter
+
+svychisq(~ edu + gender, hints5_3_rep, statistic = "adjWald") %>%
+  tidy()
+
 ```
 
 Results match the table on page 16.
@@ -161,15 +160,15 @@ Results match the table on page 16.
 #### Multivariable logistic regression of gender and education on `SeekCancerInfo`
 ##### Page 17
 
-This example illustrates a multivariable logistic regression model using the `svyglm()` function from `survey`. The first argument is a modeling formula, the second is the survey object, and the third specifies a binary response. Store the fitted model in an object so that you can extract fitted values, residuals, and model metrics. For a logistic regression model use the argument `family = "quasibinomial"`. 
+This example illustrates a multivariable logistic regression model using the `svyglm()` function from `survey`. The first argument is a modeling formula, the second is the survey object, and the third specifies a binary response. Store the fitted model in an object so that you can extract fitted values, residuals, and model metrics. For a logistic regression model use the argument `family = quasibinomial`. 
 
 ```{r logistic}
 model03 <- svyglm(SeekCancerInfo ~ gender + edu, hints5_3_rep, 
-                  family = "quasibinomial")
-model03$df.resid
+                  family = quasibinomial)
+
 ```
 
-To test for model effects, we use the `regTermTest()` function to test for the significance of terms in the model. The first argument is the model object and the second is the model term. Note the `df = 49` argument that adjusts for the replicate weight design. See the discussion "Denominator Degrees of Freedom (DDF)" in the document on page 12. These results match the "Type 3 Analysis of Effects" table on page 17.
+To test for model effects, we use the `regTermTest()` function to test for the significance of terms in the model. The first argument is the model object and the second is the model term. Note the `df = 49` argument that adjusts for the replicate weight design. See the discussion "Denominator Degrees of Freedom (DDF)" on page 12 of the document. These results match the "Type 3 Analysis of Effects" table on page 17.
 
 ```{r test_terms}
 regTermTest(model03, "gender", df = 49)
@@ -178,7 +177,6 @@ regTermTest(model03, "edu", df = 49)
 ```
 
 To obtain odds ratios with confidence intervals, exponentiate the model coefficients and interval endpoints. Note the `ddf = 49` argument to the `tidy` function. Results match the "Odds Ratio Estimates" table on page 18. Note that you must have version 0.7.0 or later of the `broom` package to get correct results.
-
 
 ```{r odds_ratios}
 # odds ratios
@@ -191,7 +189,7 @@ tidy(model03, conf.int = TRUE, exponentiate = TRUE, ddf = 49) %>%
 #### Multivariable linear regression of gender and education on `GeneralHealth`
 ##### Pages 18-19
 
-Although `GeneralHealth` is actually a categorical variable I'll follow the document and treat it as continuous for purposes of discussion. Here's the linear regression model fitting `GeneralHealth` against `Treatment_H5C3`. In the following, omitting the `family` argument defaults to the normal regression model. This code reproduces the results on page 18.
+Although `GeneralHealth` is actually a categorical variable I'll follow the document and treat it as continuous for purposes of discussion. Here's the linear regression model fitting `GeneralHealth` against `Treatment_H5C3`. In the following, omitting the `family` argument defaults to the normal regression model. This code reproduces the results on page 19.
 
 ```{r lin_model}
 model04 <- svyglm(GeneralHealth ~ gender + edu, hints5_3_rep)
@@ -201,9 +199,9 @@ tidy(model04) %>%
 ```
 
 ```{r chi_sq_lin}
-regTermTest(model04, ~gender + edu)
-regTermTest(model04, "gender")
-regTermTest(model04, "edu")
+regTermTest(model04, ~ gender + edu)
+regTermTest(model04, ~ gender)
+regTermTest(model04, ~ edu)
 
 ```
 
@@ -227,13 +225,12 @@ hints5_3_lin %>%
 ```
 
 ```{r chi_sq_taylor}
-chisq_wald <- svychisq(~ edu + gender, hints5_3_lin, statistic = "Wald")
-chisq_wald$statistic
-chisq_wald$parameter
+svychisq(~ edu + gender, hints5_3_lin, statistic = "Wald") %>% 
+  tidy()
 
-chisq_wald <- svychisq(~ edu + gender, hints5_3_lin, statistic = "adjWald")
-chisq_wald$statistic
-chisq_wald$parameter
+svychisq(~ edu + gender, hints5_3_lin, statistic = "adjWald") %>% 
+  tidy()
+   
 ```
 
 To assess for differences across modality groups, create a survey object `hints5_3_grp` that uses `nwgt0` as the sampling weight and `nwgt1` through `nwgt150` as replicate weights. Then fit a regression model using the variable of interest as the response and the group variable `Treatment_H5C3` as the covariate. Since the survey function `svychisq()` currently supports only two-way tables, use `regTermTest()` to test for group effect.
@@ -254,8 +251,8 @@ This model tests for differences across groups in the binary outcome `SeekCancer
 
 ```{r group_diff_binary}
 model01 <- svyglm(SeekCancerInfo ~ Treatment_H5C3, hints5_3_grp, 
-                  family = "quasibinomial") 
-summary(model01)
+                  family = quasibinomial) 
+tidy(model01)
 regTermTest(model01, "Treatment_H5C3")
 ```
 
@@ -267,7 +264,7 @@ This model tests for differences across groups in the outcome `GeneralHealth`, c
 
 ```{r group_diff_cont}
 model02 <- svyglm(GeneralHealth ~ Treatment_H5C3, hints5_3_grp)
-summary(model02)
+tidy(model02)
 regTermTest(model02, "Treatment_H5C3")
 
 ```
@@ -280,7 +277,7 @@ regTermTest(model02, "Treatment_H5C3")
 # predictor1 and predictor2 are placeholders
 model00 <- 
   svyglm(SeekCancerInfo ~ Treatment_H5C3 + predictor1 + predictor2 + ...,
-                 hints5_3_grp, family = "quasibinomial") 
+                 hints5_3_grp, family = quasibinomial) 
 ```
 
 #### Option B: Use one group only, without accounting for group differences
@@ -313,7 +310,7 @@ hints5_3_all <- hints5_3 %>%
  
 model04 <- 
   svyglm(SeekCancerInfo ~ predictor1 + predictor2 + ...,
-                 hints5_3_grp, family = "quasibinomial") 
+                 hints5_3_grp, family = quasibinomial) 
 ```
 
 ## Merging HINTS survey iterations
@@ -389,13 +386,13 @@ The following code replicates the results obtained from the merged data using SA
 
 ```{r merge_seek_info}
 mergeHINTSS5C2_HINTS5C3 %>% 
-  mutate_at("SeekHealthInfo", factor, labels = c("NA", "Yes", "No")) %>% 
+  mutate(SeekHealthInfo = 
+           factor(SeekHealthInfo, labels = c("NA", "Yes", "No"))) %>% 
   group_by(SeekHealthInfo) %>% 
   summarize(n = unweighted(n()),
-            pct = survey_mean(na.rm = TRUE)) %>% 
-  mutate_at(vars(starts_with("pct")), percent)
+            pct = survey_mean(na.rm = TRUE))  %>% 
+  mutate(across(starts_with("pct"), percent))
 ```
-
 
 ```{r merge_ask_ques}
 mergeHINTSS5C2_HINTS5C3 %>%
@@ -405,7 +402,7 @@ mergeHINTSS5C2_HINTS5C3 %>%
   group_by(ChanceAskQuestions) %>%
   summarize(n = unweighted(n()),
             pct = survey_mean(na.rm = TRUE)) %>%
-  mutate_at(vars(starts_with("pct")), percent)
+  mutate(across(starts_with("pct"), percent))
 ```
 
 See the script `HINTS-merge5.R` for details of merging HINTS 5, Cycles 1, 2, and 3
@@ -413,11 +410,4 @@ See the script `HINTS-merge5.R` for details of merging HINTS 5, Cycles 1, 2, and
 ## Conclusion
 
 The R language, with the packages `survey` and `srvyr`, provides an effective means for analyzing HINTS data without the need for expensive proprietary software.
-
-
-
-
-
-
-
 

@@ -1,8 +1,17 @@
+# HINTS = Health Information National Trends Survey, conducted by the National
+#   Cancer Institute.
+# This code replicates selected results from the document
+#   "HINTS 5 Cycle 3 Survey Overview & Data Analysis Recommendations.pdf"
+# Page references are to that document
+
+# https://hints.cancer.gov/
+# Data from HINTS 5, cycles 1, 2, and 3 are found in
 # https://hints.cancer.gov/dataset/HINTS5_Cycle3_SAS_03112020.zip
 # https://hints.cancer.gov/dataset/HINTS_5_Cycle_2_SAS_03192020.zip
+# https://hints.cancer.gov/dataset/HINTS-5_Cycle1_SAS.zip
 
-# page references from
-#   "HINTS 5 Cycle 3 Survey Overview & Data Analysis Recommendations.pdf"
+# Michael Laviolette, PhD MPH
+# statman54@gmail.com
 
 library(dplyr)
 library(tidyr)
@@ -10,55 +19,8 @@ library(srvyr)
 library(survey)
 library(broom)
 library(haven)  
-library(tibble)
 
 # pp. 14-15
-# SAS Data Management Code: Recoding Variables and Creating and Applying New Formats
-# *This is used to call up the formats, substitute your library name in the parentheses;
-# options fmtsearch=(hints5c3);
-# proc format; *First create some temporary formats;
-#   Value Genderf
-#     1 = "Male"
-#     2 = "Female";
-#   Value Educationf
-#     1 = "Less than high school"
-#     2 = "12 years or completed high school"
-#     3 = "Some college"
-#     4 = "College graduate or higher";
-#   value seekcancerinfof
-#     1 = "Yes"
-#     0 = "No";
-#   Value Generalf
-#     1 = "Excellent"
-#     2 = "Very good"
-#     3 = "Good"
-#     4 = "Fair"
-#     5 = "Poor";
-# run;
-
-# data hints5cycle3;
-#   set hints5c3.hints5cycle3_formatted;
-#   /* Recode negative values to missing */
-#   if genderc = 1 then gender = 1;
-#   if genderc = 2 then gender = 2;
-#   if genderc in (-9, -7) then gender = .;
-#   /* Recode education into four levels, and negative values to missing */
-#   if education in (1, 2) then edu = 1;
-#   if education = 3 then edu = 2;
-#   if education in (4, 5) then edu = 3;
-#   if education in (6, 7) then edu = 4;
-#   if education in (-9, -7) then edu = .;
-#   /* Recode seekcancerinfo to 0- 1 format for proc rlogist procedure, and 
-#       negative values to missing */
-#   if seekcancerinfo = 2 then seekcancerinfo = 0;
-#   if seekcancerinfo in (-9, -6, -2, -1) then seekcancerinfo = .;
-#   /* Recode negative values to missing for proc regress procedure */
-#   if generalhealth in (-5, -9, -7) then generalhealth = .;
-#   /*Apply formats to recoded variables */
-#   format gender genderf. edu educationf. seekcancerinfo seekcancerinfof. 
-#     generalhealth generalf.;
-# run;
-
 # Recoding variables and converting to factors
 edu_lbl <- c("Less than high school",
              "12 years or completed high school",
@@ -68,7 +30,9 @@ health_lbl <- c("Excellent", "Very good", "Good", "Fair", "Poor")
 group_lbl <-  c("Paper only", "Web option", "Web bonus")
 percent <- function(x, decimals = 4) round(100 * x, decimals)
 
-# refer to survey intstrument for correct variable names (correct case)
+# Variable names in document do not always have correct case
+# Refer to survey instrument for correct names
+# import SAS data
 hints5_3 <- read_sas(unz("HINTS5_Cycle3_SAS_03112020.zip",
                          "hints5_cycle3_public.sas7bdat")) %>% 
   mutate(gender = factor(GenderC, 1:2, c("Male", "Female")),
@@ -90,30 +54,15 @@ hints5_3 <- read_sas(unz("HINTS5_Cycle3_SAS_03112020.zip",
 # Assessing for group differences with binary outcomes, with SeekCancerInfo  
 #   as example
 # page 8
-# proc surveylogistic data=DATAFILENAME varmethod=jackknife;
-#   weight nwgt0;
-#   repweights nwgt1-nwgt150 /df=147 jkcoefs=.98;
-#   class TREATMENT_H5C3;
-#   model SeekCancerInfo = TREATMENT_H5C3;
-# run;
-
-# survey object using svrepdesign() syntax
-# hints5_3_grp <- 
-#   svrepdesign(weights = ~ nwgt0, 
-#               repweights = "nwgt([1-9]|[1-9][0-9]|1[0-4][0-9])", 
-#                             type = "JK1", scale = 49/50, mse = TRUE, df = 147,
-#                             data = hints5_3)
-
 hints5_3_grp <- as_survey_rep(hints5_3, weights = "nwgt0",
-                repweights = paste0("nwgt", 1:150), # df = 147
-                # df argument doesn't seem to have an effect
+                repweights = paste0("nwgt", 1:150), 
                 type = "JK1", scale = 49/50, mse = TRUE)
 degf(hints5_3_grp)
 model00 <- svyglm(SeekCancerInfo ~ Treatment_H5C3, hints5_3_grp, 
                   family = "quasibinomial") 
 summary(model00, df.resid = 147)
 exp(coef(model00))
-exp(confint(model00))#, ddf = 147))
+exp(confint(model00))
 
 # pp. 15-16
 # construct replicate weights survey object
@@ -122,22 +71,12 @@ hints5_3_rep <- hints5_3 %>%
                 repweights = paste0("TG_all_FINWT", 1:50),
                 type = "JK1", scale = 49/50, mse = TRUE)
 
-# degf(hints5_3_rep)
-
-# proc surveyfreq data = hints5cycle3 varmethod = jackknife;
-#   weight TG_all_FINWT0;
-#   repweights TG_all_FINWT1-TG_all_FINWT50 / df = 49 jkcoefs = 0.98;
-#   tables edu * gender / row col wchisq;
-# run;
-
 # Frequency table and chi-square test, pp. 15-16
 # THIS MATCHES SAS--don't need df argument since using design df
 tbl_1 <- hints5_3_rep %>% 
   group_by(edu, gender) %>% 
   summarize(n = unweighted(n()),
-            pct = survey_mean(na.rm = TRUE, vartype = c("se", "ci"), 
-                              # df = 49
-                              )) %>% 
+            pct = survey_mean(na.rm = TRUE, vartype = c("se", "ci"))) %>% 
   drop_na() %>% 
   mutate_at(vars(starts_with("pct")), percent)
 
@@ -166,20 +105,8 @@ or <- exp(coef(model01)) %>%
 exp(coef(model01))
 exp(confint(model01, ddf = 49))
 
-# broom::tidy() ignores ddf, why?
+# Need tidy >= 0.7.0
 tidy(model01, conf.int = TRUE, exponentiate = TRUE, ddf = 49)
-
-# examples of using df.resid argument with fitted model
-# data(api)
-# dstrat <- svydesign(id = ~ 1,strata = ~ stype, weights = ~ pw, 
-#                     data = apistrat, fpc = ~ fpc)
-# dclus2 <- svydesign(id = ~ dnum + snum, weights = ~ pw, data = apiclus2)
-# rstrat <- as.svrepdesign(dstrat)
-# rclus2 <- as.svrepdesign(dclus2)
-# summary(svyglm(api00 ~ ell + meals + mobility, design = dstrat),
-#         df.resid = Inf)
-# confint(svyglm(api00 ~ ell + meals + mobility, design = dstrat),
-#         df.resid = degf(dstrat))
 
 # p. 18-19
 model01a <- svyglm(GeneralHealth ~ gender + edu, hints5_3_rep)
@@ -225,12 +152,6 @@ anova(model02)
 
 # Test and control for group differences
 # p. 69
-# Frequency Table and Chi-Square Test
-# proc surveyfreq data=hints5cycle3 varmethod=jackknife;
-#   weight NWGT0;
-#   repweights NWGT1-NWGT150 / df=147 jkcoefs=0.98;
-#   tables treatment_h5c3 * edu * gender / row col wchisq;
-# run;
 
 chk1 <- hints5_3_grp %>% 
   group_by(Treatment_H5C3, edu, gender) %>% 
@@ -257,16 +178,8 @@ model03a <- svyglm(SeekCancerInfo ~ gender + edu, hints5_3_grp,
                   family = "quasibinomial")
 anova(model03, model03a, method = "Wald") # same results as regTermTest
 
-
 # Linear Regression
 # Multivariable linear regression of gender and education on GeneralHealth
-# proc surveyreg data = hints5cycle3 varmethod = jackknife;
-#   weight NWGT0;
-#   repweights NWGT1-NWGT150 / df = 147 jkcoefs = 0.98;
-#   class edu (ref = "Less than high school") gender (ref = "Male") 
-#     treatment_h5c3 (ref = first);
-#   model generalhealth = treatment_h5c3 edu gender / solution;
-# run;
 
 model04 <- svyglm(GeneralHealth ~ Treatment_H5C3 + gender + edu, hints5_3_grp)
 summary(model04)

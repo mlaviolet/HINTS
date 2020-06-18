@@ -374,7 +374,7 @@ summary {
 <h4 class="author">Michael Laviolette, PhD MPH</h4>
 <a class="author_email" href="mailto:#"><a href="mailto:statman54@gmail.com" class="email">statman54@gmail.com</a></a>
 </address>
-<h4 class="date">2020-06-17 15:20</h4>
+<h4 class="date">2020-06-18 13:12</h4>
 
 </div>
 
@@ -505,12 +505,12 @@ hints5_3 &lt;- read_sas(unz(&quot;HINTS5_Cycle3_SAS_03112020.zip&quot;,
                          Education %in% 6:7 ~ 4,
                          TRUE ~ NA_real_)) %&gt;% 
   # change edu and Treatment_H5C3 from numeric to factor
-  mutate_at(&quot;edu&quot;, factor, 1:4, edu_lbl) %&gt;% 
-  mutate_at(&quot;Treatment_H5C3&quot;, factor, 1:3, group_lbl) %&gt;% 
-  # &quot;No&quot; must be the referent level of SeekCancerInfo to model probability of
-  # &quot;Yes&quot;. By default the first level of a factor is the referent level, so we
-  # reverse the order from the data.
-  mutate_at(&quot;SeekCancerInfo&quot;, factor, 2:1, c(&quot;No&quot;, &quot;Yes&quot;))</code></pre>
+  mutate(edu = factor(edu, 1:4, edu_lbl),
+         Treatment_H5C3 = factor(Treatment_H5C3, 1:3, group_lbl),
+         # &quot;No&quot; must be the referent level of SeekCancerInfo to model
+         # probability of &quot;Yes&quot;. By default the first level of a factor is 
+         # the referent level, so I&#39;ll reverse the order from the data.
+         SeekCancerInfo = factor(SeekCancerInfo, 2:1, c(&quot;No&quot;, &quot;Yes&quot;)))</code></pre>
 <p>To analyze complex survey data in R we create a survey object that contains information about the sampling design and the survey data. For a replicate-weight design, we need to specify</p>
 <ul>
 <li>The data frame containing the survey data</li>
@@ -755,24 +755,20 @@ Female
 </tbody>
 </table>
 <p>To perform the chi-square test we use <code>svychisq()</code> from <code>survey</code>. Wald and adjusted Wald tests are available.</p>
-<pre class="r"><code>chisq_test &lt;- svychisq(~ edu + gender, hints5_3_rep, statistic = &quot;Wald&quot;)
-chisq_test$statistic</code></pre>
-<pre><code>##       [,1]
-## [1,] 13.81
-## attr(,&quot;names&quot;)
-## [1] &quot;F&quot;</code></pre>
-<pre class="r"><code>chisq_test$parameter</code></pre>
-<pre><code>## ndf ddf 
-##   3  49</code></pre>
-<pre class="r"><code>chisq_test2 &lt;- svychisq(~ edu + gender, hints5_3_rep, statistic = &quot;adjWald&quot;)
-chisq_test2$statistic</code></pre>
-<pre><code>##       [,1]
-## [1,] 13.24
-## attr(,&quot;names&quot;)
-## [1] &quot;F&quot;</code></pre>
-<pre class="r"><code>chisq_test2$parameter</code></pre>
-<pre><code>## ndf ddf 
-##   3  47</code></pre>
+<pre class="r"><code>svychisq(~ edu + gender, hints5_3_rep, statistic = &quot;Wald&quot;) %&gt;% 
+  tidy()</code></pre>
+<pre><code>## Multiple parameters; naming those columns ndf, ddf</code></pre>
+<pre><code>## # A tibble: 1 x 5
+##     ndf   ddf statistic[,1] p.value[,1] method                               
+##   &lt;dbl&gt; &lt;dbl&gt;         &lt;dbl&gt;       &lt;dbl&gt; &lt;chr&gt;                                
+## 1     3    49          13.8  0.00000119 Design-based Wald test of association</code></pre>
+<pre class="r"><code>svychisq(~ edu + gender, hints5_3_rep, statistic = &quot;adjWald&quot;) %&gt;%
+  tidy()</code></pre>
+<pre><code>## Multiple parameters; naming those columns ndf, ddf</code></pre>
+<pre><code>## # A tibble: 1 x 5
+##     ndf   ddf statistic[,1] p.value[,1] method                               
+##   &lt;dbl&gt; &lt;dbl&gt;         &lt;dbl&gt;       &lt;dbl&gt; &lt;chr&gt;                                
+## 1     3    47          13.2  0.00000215 Design-based Wald test of association</code></pre>
 <p>Results match the table on page 16.</p>
 </div>
 </div>
@@ -780,21 +776,19 @@ chisq_test2$statistic</code></pre>
 <h4>Multivariable logistic regression of gender and education on <code>SeekCancerInfo</code></h4>
 <div id="page-17" class="section level5">
 <h5>Page 17</h5>
-<p>This example illustrates a multivariable logistic regression model using the <code>svyglm()</code> function from <code>survey</code>. The first argument is a modeling formula, the second is the survey object, and the third specifies a binary response. Store the fitted model in an object so that you can extract fitted values, residuals, and model metrics. For a logistic regression model use the argument <code>family = &quot;quasibinomial&quot;</code>.</p>
+<p>This example illustrates a multivariable logistic regression model using the <code>svyglm()</code> function from <code>survey</code>. The first argument is a modeling formula, the second is the survey object, and the third specifies a binary response. Store the fitted model in an object so that you can extract fitted values, residuals, and model metrics. For a logistic regression model use the argument <code>family = quasibinomial</code>.</p>
 <pre class="r"><code>model03 &lt;- svyglm(SeekCancerInfo ~ gender + edu, hints5_3_rep, 
-                  family = &quot;quasibinomial&quot;)
-model03$df.resid</code></pre>
-<pre><code>## [1] 45</code></pre>
-<p>To test for model effects, we use the <code>regTermTest()</code> function to test for the significance of terms in the model. The first argument is the model object and the second is the model term. Note the <code>df = 49</code> argument that adjusts for the replicate weight design. See the discussion “Denominator Degrees of Freedom (DDF)” in the document on page 12. These results match the “Type 3 Analysis of Effects” table on page 17.</p>
+                  family = quasibinomial)</code></pre>
+<p>To test for model effects, we use the <code>regTermTest()</code> function to test for the significance of terms in the model. The first argument is the model object and the second is the model term. Note the <code>df = 49</code> argument that adjusts for the replicate weight design. See the discussion “Denominator Degrees of Freedom (DDF)” on page 12 of the document . These results match the “Type 3 Analysis of Effects” table on page 17.</p>
 <pre class="r"><code>regTermTest(model03, &quot;gender&quot;, df = 49)</code></pre>
 <pre><code>## Wald test for gender
 ##  in svyglm(formula = SeekCancerInfo ~ gender + edu, hints5_3_rep, 
-##     family = &quot;quasibinomial&quot;)
+##     family = quasibinomial)
 ## F =  18.89  on  1  and  49  df: p= 7e-05</code></pre>
 <pre class="r"><code>regTermTest(model03, &quot;edu&quot;, df = 49)</code></pre>
 <pre><code>## Wald test for edu
 ##  in svyglm(formula = SeekCancerInfo ~ gender + edu, hints5_3_rep, 
-##     family = &quot;quasibinomial&quot;)
+##     family = quasibinomial)
 ## F =  27.27  on  3  and  49  df: p= 1.6e-10</code></pre>
 <p>To obtain odds ratios with confidence intervals, exponentiate the model coefficients and interval endpoints. Note the <code>ddf = 49</code> argument to the <code>tidy</code> function. Results match the “Odds Ratio Estimates” table on page 18. Note that you must have version 0.7.0 or later of the <code>broom</code> package to get correct results.</p>
 <pre class="r"><code># odds ratios
@@ -952,7 +946,7 @@ eduCollege graduate or higher
 <h4>Multivariable linear regression of gender and education on <code>GeneralHealth</code></h4>
 <div id="pages-18-19" class="section level5">
 <h5>Pages 18-19</h5>
-<p>Although <code>GeneralHealth</code> is actually a categorical variable I’ll follow the document and treat it as continuous for purposes of discussion. Here’s the linear regression model fitting <code>GeneralHealth</code> against <code>Treatment_H5C3</code>. In the following, omitting the <code>family</code> argument defaults to the normal regression model. This code reproduces the results on page 18.</p>
+<p>Although <code>GeneralHealth</code> is actually a categorical variable I’ll follow the document and treat it as continuous for purposes of discussion. Here’s the linear regression model fitting <code>GeneralHealth</code> against <code>Treatment_H5C3</code>. In the following, omitting the <code>family</code> argument defaults to the normal regression model. This code reproduces the results on page 19.</p>
 <pre class="r"><code>model04 &lt;- svyglm(GeneralHealth ~ gender + edu, hints5_3_rep)
 tidy(model04) %&gt;% 
   kable() %&gt;% 
@@ -1065,15 +1059,15 @@ eduCollege graduate or higher
 </tr>
 </tbody>
 </table>
-<pre class="r"><code>regTermTest(model04, ~gender + edu)</code></pre>
+<pre class="r"><code>regTermTest(model04, ~ gender + edu)</code></pre>
 <pre><code>## Wald test for gender edu
 ##  in svyglm(formula = GeneralHealth ~ gender + edu, hints5_3_rep)
 ## F =  31.82  on  4  and  45  df: p= 1.3e-12</code></pre>
-<pre class="r"><code>regTermTest(model04, &quot;gender&quot;)</code></pre>
+<pre class="r"><code>regTermTest(model04, ~ gender)</code></pre>
 <pre><code>## Wald test for gender
 ##  in svyglm(formula = GeneralHealth ~ gender + edu, hints5_3_rep)
 ## F =  3.171  on  1  and  45  df: p= 0.082</code></pre>
-<pre class="r"><code>regTermTest(model04, &quot;edu&quot;)</code></pre>
+<pre class="r"><code>regTermTest(model04, ~ edu)</code></pre>
 <pre><code>## Wald test for edu
 ##  in svyglm(formula = GeneralHealth ~ gender + edu, hints5_3_rep)
 ## F =  41.07  on  3  and  45  df: p= 6.1e-13</code></pre>
@@ -1306,24 +1300,20 @@ Female
 </tr>
 </tbody>
 </table>
-<pre class="r"><code>chisq_wald &lt;- svychisq(~ edu + gender, hints5_3_lin, statistic = &quot;Wald&quot;)
-chisq_wald$statistic</code></pre>
-<pre><code>##        [,1]
-## [1,] 0.8046
-## attr(,&quot;names&quot;)
-## [1] &quot;F&quot;</code></pre>
-<pre class="r"><code>chisq_wald$parameter</code></pre>
-<pre><code>## ndf ddf 
-##   3 294</code></pre>
-<pre class="r"><code>chisq_wald &lt;- svychisq(~ edu + gender, hints5_3_lin, statistic = &quot;adjWald&quot;)
-chisq_wald$statistic</code></pre>
-<pre><code>##        [,1]
-## [1,] 0.7991
-## attr(,&quot;names&quot;)
-## [1] &quot;F&quot;</code></pre>
-<pre class="r"><code>chisq_wald$parameter</code></pre>
-<pre><code>## ndf ddf 
-##   3 292</code></pre>
+<pre class="r"><code>svychisq(~ edu + gender, hints5_3_lin, statistic = &quot;Wald&quot;) %&gt;% 
+  tidy()</code></pre>
+<pre><code>## Multiple parameters; naming those columns ndf, ddf</code></pre>
+<pre><code>## # A tibble: 1 x 5
+##     ndf   ddf statistic[,1] p.value[,1] method                               
+##   &lt;dbl&gt; &lt;dbl&gt;         &lt;dbl&gt;       &lt;dbl&gt; &lt;chr&gt;                                
+## 1     3   294         0.805       0.492 Design-based Wald test of association</code></pre>
+<pre class="r"><code>svychisq(~ edu + gender, hints5_3_lin, statistic = &quot;adjWald&quot;) %&gt;% 
+  tidy()</code></pre>
+<pre><code>## Multiple parameters; naming those columns ndf, ddf</code></pre>
+<pre><code>## # A tibble: 1 x 5
+##     ndf   ddf statistic[,1] p.value[,1] method                               
+##   &lt;dbl&gt; &lt;dbl&gt;         &lt;dbl&gt;       &lt;dbl&gt; &lt;chr&gt;                                
+## 1     3   292         0.799       0.495 Design-based Wald test of association</code></pre>
 <p>To assess for differences across modality groups, create a survey object <code>hints5_3_grp</code> that uses <code>nwgt0</code> as the sampling weight and <code>nwgt1</code> through <code>nwgt150</code> as replicate weights. Then fit a regression model using the variable of interest as the response and the group variable <code>Treatment_H5C3</code> as the covariate. Since the survey function <code>svychisq()</code> currently supports only two-way tables, use <code>regTermTest()</code> to test for group effect.</p>
 </div>
 </div>
@@ -1342,31 +1332,18 @@ chisq_wald$statistic</code></pre>
 <h5>Page 8</h5>
 <p>This model tests for differences across groups in the binary outcome <code>SeekCancerInfo</code>.</p>
 <pre class="r"><code>model01 &lt;- svyglm(SeekCancerInfo ~ Treatment_H5C3, hints5_3_grp, 
-                  family = &quot;quasibinomial&quot;) 
-summary(model01)</code></pre>
-<pre><code>## 
-## Call:
-## svyglm(formula = SeekCancerInfo ~ Treatment_H5C3, hints5_3_grp, 
-##     family = &quot;quasibinomial&quot;)
-## 
-## Survey design:
-## Called via srvyr
-## 
-## Coefficients:
-##                          Estimate Std. Error t value Pr(&gt;|t|)    
-## (Intercept)                0.2132     0.0576    3.70   0.0003 ***
-## Treatment_H5C3Web option  -0.0762     0.1179   -0.65   0.5193    
-## Treatment_H5C3Web bonus   -0.1651     0.1130   -1.46   0.1462    
-## ---
-## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
-## 
-## (Dispersion parameter for quasibinomial family taken to be 5364)
-## 
-## Number of Fisher Scoring iterations: 4</code></pre>
+                  family = quasibinomial) 
+tidy(model01)</code></pre>
+<pre><code>## # A tibble: 3 x 5
+##   term                     estimate std.error statistic  p.value
+##   &lt;chr&gt;                       &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+## 1 (Intercept)                0.213     0.0576     3.70  0.000303
+## 2 Treatment_H5C3Web option  -0.0762    0.118     -0.646 0.519   
+## 3 Treatment_H5C3Web bonus   -0.165     0.113     -1.46  0.146</code></pre>
 <pre class="r"><code>regTermTest(model01, &quot;Treatment_H5C3&quot;)</code></pre>
 <pre><code>## Wald test for Treatment_H5C3
 ##  in svyglm(formula = SeekCancerInfo ~ Treatment_H5C3, hints5_3_grp, 
-##     family = &quot;quasibinomial&quot;)
+##     family = quasibinomial)
 ## F =  1.109  on  2  and  147  df: p= 0.33</code></pre>
 <p>Note that “Paper only” is the referent because it’s the first level of <code>Treatment_H5C3</code>. The results indicate no significant differences in <code>SeekCancerInfo</code> between the treatment groups.</p>
 </div>
@@ -1375,25 +1352,13 @@ summary(model01)</code></pre>
 <h3>Assessing differences across groups, continuous outcome</h3>
 <p>This model tests for differences across groups in the outcome <code>GeneralHealth</code>, considered as continuous.</p>
 <pre class="r"><code>model02 &lt;- svyglm(GeneralHealth ~ Treatment_H5C3, hints5_3_grp)
-summary(model02)</code></pre>
-<pre><code>## 
-## Call:
-## svyglm(formula = GeneralHealth ~ Treatment_H5C3, hints5_3_grp)
-## 
-## Survey design:
-## Called via srvyr
-## 
-## Coefficients:
-##                          Estimate Std. Error t value Pr(&gt;|t|)    
-## (Intercept)                2.5598     0.0281   90.97   &lt;2e-16 ***
-## Treatment_H5C3Web option  -0.0086     0.0473   -0.18     0.86    
-## Treatment_H5C3Web bonus   -0.0291     0.0643   -0.45     0.65    
-## ---
-## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
-## 
-## (Dispersion parameter for gaussian family taken to be 4910)
-## 
-## Number of Fisher Scoring iterations: 2</code></pre>
+tidy(model02)</code></pre>
+<pre><code>## # A tibble: 3 x 5
+##   term                     estimate std.error statistic   p.value
+##   &lt;chr&gt;                       &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
+## 1 (Intercept)               2.56       0.0281    91.0   3.94e-131
+## 2 Treatment_H5C3Web option -0.00860    0.0473    -0.182 8.56e-  1
+## 3 Treatment_H5C3Web bonus  -0.0291     0.0643    -0.453 6.51e-  1</code></pre>
 <pre class="r"><code>regTermTest(model02, &quot;Treatment_H5C3&quot;)</code></pre>
 <pre><code>## Wald test for Treatment_H5C3
 ##  in svyglm(formula = GeneralHealth ~ Treatment_H5C3, hints5_3_grp)
@@ -1406,7 +1371,7 @@ summary(model02)</code></pre>
 <pre class="r"><code># predictor1 and predictor2 are placeholders
 model00 &lt;- 
   svyglm(SeekCancerInfo ~ Treatment_H5C3 + predictor1 + predictor2 + ...,
-                 hints5_3_grp, family = &quot;quasibinomial&quot;) </code></pre>
+                 hints5_3_grp, family = quasibinomial) </code></pre>
 </div>
 <div id="option-b-use-one-group-only-without-accounting-for-group-differences" class="section level4">
 <h4>Option B: Use one group only, without accounting for group differences</h4>
@@ -1434,7 +1399,7 @@ model03 &lt;-
  
 model04 &lt;- 
   svyglm(SeekCancerInfo ~ predictor1 + predictor2 + ...,
-                 hints5_3_grp, family = &quot;quasibinomial&quot;) </code></pre>
+                 hints5_3_grp, family = quasibinomial) </code></pre>
 </div>
 </div>
 </div>
@@ -1504,11 +1469,12 @@ mergeHINTSS5C2_HINTS5C3 &lt;-
 rm(temp_hints5_cycle2, temp_hints5_cycle3)</code></pre>
 <p>The following code replicates the results obtained from the merged data using SAS.</p>
 <pre class="r"><code>mergeHINTSS5C2_HINTS5C3 %&gt;% 
-  mutate_at(&quot;SeekHealthInfo&quot;, factor, labels = c(&quot;NA&quot;, &quot;Yes&quot;, &quot;No&quot;)) %&gt;% 
+  mutate(SeekHealthInfo = 
+           factor(SeekHealthInfo, labels = c(&quot;NA&quot;, &quot;Yes&quot;, &quot;No&quot;))) %&gt;% 
   group_by(SeekHealthInfo) %&gt;% 
   summarize(n = unweighted(n()),
-            pct = survey_mean(na.rm = TRUE)) %&gt;% 
-  mutate_at(vars(starts_with(&quot;pct&quot;)), percent)</code></pre>
+            pct = survey_mean(na.rm = TRUE))  %&gt;% 
+  mutate(across(starts_with(&quot;pct&quot;), percent))</code></pre>
 <pre><code>## # A tibble: 3 x 4
 ##   SeekHealthInfo     n    pct pct_se
 ##   &lt;fct&gt;          &lt;int&gt;  &lt;dbl&gt;  &lt;dbl&gt;
@@ -1522,7 +1488,7 @@ rm(temp_hints5_cycle2, temp_hints5_cycle3)</code></pre>
   group_by(ChanceAskQuestions) %&gt;%
   summarize(n = unweighted(n()),
             pct = survey_mean(na.rm = TRUE)) %&gt;%
-  mutate_at(vars(starts_with(&quot;pct&quot;)), percent)</code></pre>
+  mutate(across(starts_with(&quot;pct&quot;), percent))</code></pre>
 <pre><code>## # A tibble: 9 x 4
 ##   ChanceAskQuestions     n     pct pct_se
 ##   &lt;fct&gt;              &lt;int&gt;   &lt;dbl&gt;  &lt;dbl&gt;
