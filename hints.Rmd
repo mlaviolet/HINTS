@@ -171,8 +171,8 @@ model03 <- svyglm(SeekCancerInfo ~ gender + edu, hints5_3_rep,
 To test for model effects, we use the `regTermTest()` function to test for the significance of terms in the model. The first argument is the model object and the second is the model term. Note the `df = 49` argument that adjusts for the replicate weight design. See the discussion "Denominator Degrees of Freedom (DDF)" on page 12 of the document. These results match the "Type 3 Analysis of Effects" table on page 17.
 
 ```{r test_terms}
-regTermTest(model03, "gender", df = 49)
-regTermTest(model03, "edu", df = 49)
+regTermTest(model03, ~ gender, df = 49)
+regTermTest(model03, ~ edu, df = 49)
 
 ```
 
@@ -253,7 +253,7 @@ This model tests for differences across groups in the binary outcome `SeekCancer
 model01 <- svyglm(SeekCancerInfo ~ Treatment_H5C3, hints5_3_grp, 
                   family = quasibinomial) 
 tidy(model01)
-regTermTest(model01, "Treatment_H5C3")
+regTermTest(model01, ~ Treatment_H5C3)
 ```
 
 Note that "Paper only" is the referent because it's the first level of `Treatment_H5C3`. The results indicate no significant differences in `SeekCancerInfo` between the treatment groups.
@@ -265,7 +265,7 @@ This model tests for differences across groups in the outcome `GeneralHealth`, c
 ```{r group_diff_cont}
 model02 <- svyglm(GeneralHealth ~ Treatment_H5C3, hints5_3_grp)
 tidy(model02)
-regTermTest(model02, "Treatment_H5C3")
+regTermTest(model02, ~ Treatment_H5C3)
 
 ```
 
