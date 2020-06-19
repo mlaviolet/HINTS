@@ -5,8 +5,8 @@ January 2020 */
 DM OUTPUT 'clear' continue;
 DM LOG    'clear' continue;
 
-* libname library "R:\OCPH\CDP\1815\1815 Epidemiology\HINTS";
-libname library "F:\HINTS";
+libname library "R:\OCPH\CDP\1815\1815 Epidemiology\HINTS";
+* libname library "F:\HINTS";
 proc format cntlin = library.fmt_53;
 run;
 
@@ -19,8 +19,8 @@ run;
 data hints5_cycle3;
   set library.hints5_cycle3_public;
   *Set negative values to missing;
-  if SeekCancerInfo < 0 then SeekCancerInfo = .;
-  if GeneralHealth < 0 then GeneralHealth = .;
+  if SeekCancerInfo < 0 then call missing(SeekCancerInfo);
+  if GeneralHealth < 0 then call missing(GeneralHealth);
 run;
 
 proc freq data = hints5_cycle3;
@@ -31,7 +31,7 @@ title "Assessing for group differences with binary outcomes using SeekCancerInfo
 title2 "page 8";
 proc surveylogistic data = hints5_cycle3 varmethod = jackknife;
   weight nwgt0;
-  repweights nwgt1 - nwgt150 / df = 147 jkcoefs =.98;
+  repweights nwgt1 - nwgt150 / df = 147 jkcoefs =0.98;
   class TREATMENT_H5C3;
   model SeekCancerInfo = TREATMENT_H5C3;
 run;
