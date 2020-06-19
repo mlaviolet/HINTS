@@ -374,7 +374,7 @@ summary {
 <h4 class="author">Michael Laviolette, PhD MPH</h4>
 <a class="author_email" href="mailto:#"><a href="mailto:statman54@gmail.com" class="email">statman54@gmail.com</a></a>
 </address>
-<h4 class="date">2020-06-18 13:54</h4>
+<h4 class="date">2020-06-18 16:04</h4>
 
 </div>
 
@@ -525,7 +525,7 @@ hints5_3 &lt;- read_sas(unz(&quot;HINTS5_Cycle3_SAS_03112020.zip&quot;,
 <h4>Frequency table and chi-square test</h4>
 <div id="pages-15-16" class="section level5">
 <h5>Pages 15-16</h5>
-<p>Using <code>survey_mean()</code> from <code>srvyr</code> I’ll generate a cross-frequency table of education by gender, along with a (Wald) Chi-squared test of independence. First we construct a replicate weights survey object using the <code>TG_all_FINWT</code> series of 50 replicate weights.</p>
+<p>Using <code>survey_mean()</code> from <code>srvyr</code> I’ll generate a cross-frequency table of education by gender, along with a Wald chi-squared test of independence. First construct a replicate weights survey object using the <code>TG_all_FINWT</code> series of 50 replicate weights.</p>
 <pre class="r"><code># construct replicate weights survey object
 hints5_3_rep &lt;- as_survey_rep(hints5_3, weights = &quot;TG_all_FINWT0&quot;,
                               repweights = paste0(&quot;TG_all_FINWT&quot;, 1:50),
@@ -779,7 +779,7 @@ Female
 <p>This example illustrates a multivariable logistic regression model using the <code>svyglm()</code> function from <code>survey</code>. The first argument is a modeling formula, the second is the survey object, and the third specifies a binary response. Store the fitted model in an object so that you can extract fitted values, residuals, and model metrics. For a logistic regression model use the argument <code>family = quasibinomial</code>.</p>
 <pre class="r"><code>model03 &lt;- svyglm(SeekCancerInfo ~ gender + edu, hints5_3_rep, 
                   family = quasibinomial)</code></pre>
-<p>To test for model effects, we use the <code>regTermTest()</code> function to test for the significance of terms in the model. The first argument is the model object and the second is the model term. Note the <code>df = 49</code> argument that adjusts for the replicate weight design. See the discussion “Denominator Degrees of Freedom (DDF)” on page 12 of the document. These results match the “Type 3 Analysis of Effects” table on page 17.</p>
+<p>To test for model effects, use the <code>regTermTest()</code> function. The first argument is the model object and the second is the model term or terms being tested (as a formula). Note the <code>df = 49</code> argument that adjusts for the replicate weight design. See the discussion “Denominator Degrees of Freedom (DDF)” on page 12 of the document. These results match the “Type 3 Analysis of Effects” table on page 17.</p>
 <pre class="r"><code>regTermTest(model03, ~ gender, df = 49)</code></pre>
 <pre><code>## Wald test for gender
 ##  in svyglm(formula = SeekCancerInfo ~ gender + edu, hints5_3_rep, 

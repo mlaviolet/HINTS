@@ -118,7 +118,7 @@ Standard errors can also be computed with Taylor series linearization. For more,
 #### Frequency table and chi-square test
 ##### Pages 15-16
 
-Using `survey_mean()` from `srvyr` I'll generate a cross-frequency table of education by gender, along with a (Wald) Chi-squared test of independence. First we construct a replicate weights survey object using the `TG_all_FINWT` series of 50 replicate weights.
+Using `survey_mean()` from `srvyr` I'll generate a cross-frequency table of education by gender, along with a Wald chi-squared test of independence. First  construct a replicate weights survey object using the `TG_all_FINWT` series of 50 replicate weights.
 
 ```{r survey_rep, warning = FALSE}
 # construct replicate weights survey object
@@ -168,7 +168,7 @@ model03 <- svyglm(SeekCancerInfo ~ gender + edu, hints5_3_rep,
 
 ```
 
-To test for model effects, we use the `regTermTest()` function to test for the significance of terms in the model. The first argument is the model object and the second is the model term. Note the `df = 49` argument that adjusts for the replicate weight design. See the discussion "Denominator Degrees of Freedom (DDF)" on page 12 of the document. These results match the "Type 3 Analysis of Effects" table on page 17.
+To test for model effects, use the `regTermTest()` function. The first argument is the model object and the second is the model term or terms being tested (as a formula). Note the `df = 49` argument that adjusts for the replicate weight design. See the discussion "Denominator Degrees of Freedom (DDF)" on page 12 of the document. These results match the "Type 3 Analysis of Effects" table on page 17.
 
 ```{r test_terms}
 regTermTest(model03, ~ gender, df = 49)
