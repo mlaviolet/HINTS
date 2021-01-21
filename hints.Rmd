@@ -1,10 +1,12 @@
 ---
 title: "HINTS with R"
-author: 
-  - name          : "Michael Laviolette, PhD MPH" 
-    email         : "statman54@gmail.com"
+author:
+- name: Michael Laviolette, PhD MPH
+  email: statman54@gmail.com
 date: "`r format(Sys.time(), '%Y-%m-%d %H:%M')`"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -183,7 +185,6 @@ To obtain odds ratios with confidence intervals, exponentiate the model coeffici
 tidy(model03, conf.int = TRUE, exponentiate = TRUE, ddf = 49) %>% 
   kable() %>% 
   kable_styling()
-# NOTE: You must have broom >= 0.7.0 to get correct results
 ```
 
 #### Multivariable linear regression of gender and education on `GeneralHealth`
