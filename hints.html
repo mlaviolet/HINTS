@@ -374,7 +374,7 @@ summary {
 <h4 class="author">Michael Laviolette, PhD MPH</h4>
 <a class="author_email" href="mailto:#"><a href="mailto:statman54@gmail.com" class="email">statman54@gmail.com</a></a>
 </address>
-<h4 class="date">2020-06-18 16:04</h4>
+<h4 class="date">2020-06-22 19:05</h4>
 
 </div>
 
@@ -479,8 +479,9 @@ library(srvyr)
 library(survey)
 library(tidyr)</code></pre>
 <p>Most of the work is done by the <code>survey</code> and <code>srvyr</code> packages. The <code>survey</code> package provides functions for analysis of data from complex samples with similar functionality to SUDAAN. <code>srvyr</code> is designed to work with the <code>tidyverse</code> suite. I’ll use the <code>tidyverse</code> packages extensively.</p>
-<div id="import-and-recode-data" class="section level4">
-<h4>Import and recode data</h4>
+</div>
+<div id="import-and-recode-data" class="section level3">
+<h3>Import and recode data</h3>
 <div id="pages-14-15" class="section level5">
 <h5>Pages 14-15</h5>
 <p>HINTS data are provided in three formats: SAS <code>.sas7bdat</code> data set, SPSS (<code>.sav</code>, <code>.por</code>), and Stata (<code>.dta</code>, versions prior to 13). All can be imported by R; I’ll work with the SAS data. First we import the SAS data set into R using <code>read_sas()</code> from the <code>haven</code> package, then do some recoding.</p>
@@ -521,8 +522,8 @@ hints5_3 &lt;- read_sas(unz(&quot;HINTS5_Cycle3_SAS_03112020.zip&quot;,
 <p>Standard errors can also be computed with Taylor series linearization. For more, see the section “Final Sample and Replicate Weights for Jackknife Replication.”</p>
 </div>
 </div>
-<div id="frequency-table-and-chi-square-test" class="section level4">
-<h4>Frequency table and chi-square test</h4>
+<div id="frequency-table-and-chi-square-test" class="section level3">
+<h3>Frequency table and chi-square test</h3>
 <div id="pages-15-16" class="section level5">
 <h5>Pages 15-16</h5>
 <p>Using <code>survey_mean()</code> from <code>srvyr</code> I’ll generate a cross-frequency table of education by gender, along with a Wald chi-squared test of independence. First construct a replicate weights survey object using the <code>TG_all_FINWT</code> series of 50 replicate weights.</p>
@@ -536,7 +537,7 @@ hints5_3_rep &lt;- as_survey_rep(hints5_3, weights = &quot;TG_all_FINWT0&quot;,
   summarize(n = unweighted(n()),
             pct = survey_mean(na.rm = TRUE, vartype = c(&quot;se&quot;, &quot;ci&quot;))) %&gt;% 
   drop_na() %&gt;% 
-  mutate_at(vars(starts_with(&quot;pct&quot;)), percent)
+  mutate(across(starts_with(&quot;pct&quot;), percent))
 
 tbl_1 %&gt;% 
   kable() %&gt;% 
@@ -772,8 +773,8 @@ Female
 <p>Results match the table on page 16.</p>
 </div>
 </div>
-<div id="multivariable-logistic-regression-of-gender-and-education-on-seekcancerinfo" class="section level4">
-<h4>Multivariable logistic regression of gender and education on <code>SeekCancerInfo</code></h4>
+<div id="multivariable-logistic-regression-of-gender-and-education-on-seekcancerinfo" class="section level3">
+<h3>Multivariable logistic regression of gender and education on <code>SeekCancerInfo</code></h3>
 <div id="page-17" class="section level5">
 <h5>Page 17</h5>
 <p>This example illustrates a multivariable logistic regression model using the <code>svyglm()</code> function from <code>survey</code>. The first argument is a modeling formula, the second is the survey object, and the third specifies a binary response. Store the fitted model in an object so that you can extract fitted values, residuals, and model metrics. For a logistic regression model use the argument <code>family = quasibinomial</code>.</p>
@@ -939,11 +940,10 @@ eduCollege graduate or higher
 </tr>
 </tbody>
 </table>
-<pre class="r"><code># NOTE: You must have broom &gt;= 0.7.0 to get correct results</code></pre>
 </div>
 </div>
-<div id="multivariable-linear-regression-of-gender-and-education-on-generalhealth" class="section level4">
-<h4>Multivariable linear regression of gender and education on <code>GeneralHealth</code></h4>
+<div id="multivariable-linear-regression-of-gender-and-education-on-generalhealth" class="section level3">
+<h3>Multivariable linear regression of gender and education on <code>GeneralHealth</code></h3>
 <div id="pages-18-19" class="section level5">
 <h5>Pages 18-19</h5>
 <p>Although <code>GeneralHealth</code> is actually a categorical variable I’ll follow the document and treat it as continuous for purposes of discussion. Here’s the linear regression model fitting <code>GeneralHealth</code> against <code>Treatment_H5C3</code>. In the following, omitting the <code>family</code> argument defaults to the normal regression model. This code reproduces the results on page 19.</p>
@@ -1073,8 +1073,8 @@ eduCollege graduate or higher
 ## F =  41.07  on  3  and  45  df: p= 6.1e-13</code></pre>
 </div>
 </div>
-<div id="taylor-series-linearization-variance-estimation-method" class="section level4">
-<h4>Taylor series linearization variance estimation method</h4>
+<div id="taylor-series-linearization-variance-estimation-method" class="section level3">
+<h3>Taylor series linearization variance estimation method</h3>
 <p>Replication is the recommended method for variance estimation in HINTS. The variables VAR_CLUSTER and VAR_STRATUM are provided for variance estimation using Taylor series linearization. These variables are provided for users of software packages which don’t support replicate weights. The following code constructs the survey object for analyzing the combined sample (no group differences) and replicates the results on pages 20 and 21. Standard errors and confidence intervals differ slightly from those obtained using replicate weights.</p>
 <pre class="r"><code>hints5_3_lin &lt;- 
   as_survey_design(hints5_3, ids = VAR_CLUSTER, strata = VAR_STRATUM, 
@@ -1084,7 +1084,7 @@ hints5_3_lin %&gt;%
   summarize(n = unweighted(n()),
             pct = survey_mean(na.rm = TRUE, vartype = c(&quot;se&quot;, &quot;ci&quot;))) %&gt;% 
   drop_na() %&gt;% 
-  mutate_at(vars(starts_with(&quot;pct&quot;)), percent) %&gt;% 
+  mutate(across(starts_with(&quot;pct&quot;), percent)) %&gt;% 
   kable() %&gt;% 
   kable_styling()</code></pre>
 <table class="table" style="margin-left: auto; margin-right: auto;">
@@ -1317,7 +1317,6 @@ Female
 <p>To assess for differences across modality groups, create a survey object <code>hints5_3_grp</code> that uses <code>nwgt0</code> as the sampling weight and <code>nwgt1</code> through <code>nwgt150</code> as replicate weights. Then fit a regression model using the variable of interest as the response and the group variable <code>Treatment_H5C3</code> as the covariate. Since the survey function <code>svychisq()</code> currently supports only two-way tables, use <code>regTermTest()</code> to test for group effect.</p>
 </div>
 </div>
-</div>
 <div id="assessing-differences-across-groups" class="section level2">
 <h2>Assessing differences across groups</h2>
 <div id="page-8" class="section level4">
@@ -1403,8 +1402,11 @@ model04 &lt;-
 </div>
 </div>
 </div>
-<div id="merging-hints-survey-iterations" class="section level2">
-<h2>Merging HINTS survey iterations</h2>
+</div>
+<div id="merging-hints-survey-iterations" class="section level1">
+<h1>Merging HINTS survey iterations</h1>
+<div id="pages-52-54" class="section level5">
+<h5>Pages 52-54</h5>
 <p>The following code (pp. 52-54) merges HINTS 5, Cycles 2 and 3 assuming no differences between groups.</p>
 <pre class="r"><code># Cycle 2, 100 replicate weights
 # cycle2a, import Cycle 2 data
@@ -1460,8 +1462,8 @@ mergeHINTSS5C2_HINTS5C3 &lt;-
   # reorder columns to put new weights in front
   select(survey, PersonID, num_range(&quot;Merged_NWGT&quot;, 0:100), everything()) %&gt;% 
   # variable to distinguish survey iterations
-  mutate_at(&quot;survey&quot;, factor, levels = 1:2,
-            labels = c(&quot;HINTS 5 Cycle 2&quot;, &quot;HINTS 5 Cycle 3&quot;)) %&gt;% 
+  mutate(survey = factor(survey, 1:2, 
+                         c(&quot;HINTS 5 Cycle 2&quot;, &quot;HINTS 5 Cycle 3&quot;))) %&gt;% 
   # survey design object
   as_survey_rep(weights = &quot;Merged_NWGT0&quot;,
                 repweights = paste0(&quot;Merged_NWGT&quot;, 1:100), 
@@ -1503,10 +1505,10 @@ rm(temp_hints5_cycle2, temp_hints5_cycle3)</code></pre>
 ## 9 Never                 79  0.787  0.126</code></pre>
 <p>See the script <code>HINTS-merge5.R</code> for details of merging HINTS 5, Cycles 1, 2, and 3</p>
 </div>
-<div id="conclusion" class="section level2">
-<h2>Conclusion</h2>
-<p>The R language, with the packages <code>survey</code> and <code>srvyr</code>, provides an effective means for analyzing HINTS data without the need for expensive proprietary software.</p>
 </div>
+<div id="conclusion" class="section level1">
+<h1>Conclusion</h1>
+<p>The R language, with the packages <code>survey</code> and <code>srvyr</code>, provides an effective means for analyzing HINTS data without the need for expensive proprietary software.</p>
 </div>
 
 
